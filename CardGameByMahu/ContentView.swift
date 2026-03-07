@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
+
 struct ContentView: View {
     
+    @Environment(\.modelContext) private var context
     @StateObject private var viewModel = CardGameViewModel()
     
     var body: some View {
@@ -30,7 +33,30 @@ struct ContentView: View {
                     .scaledToFit()
                     .frame(height: 200)
                     .padding(.top, 30)
-                
+                HStack {
+                    Text("Cards in Deck: \(viewModel.remainingCards)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Button {
+                        // Manually trigger a deck reset
+                        viewModel.resetDeck()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Reshuffle")
+                        }
+                        .font(.subheadline).bold()
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.orange.opacity(0.8))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 30)
                 Spacer()
                 
                 // Cards
@@ -45,7 +71,7 @@ struct ContentView: View {
                             .frame(height: 150)
                             .opacity(playerRotation < 90 ? 1 : 0)
                             .rotation3DEffect(.degrees(playerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-
+                        
                         // Back (revealed face) — visible for 90...180°
                         Image(viewModel.playerCard)
                             .resizable()
@@ -66,7 +92,7 @@ struct ContentView: View {
                             .frame(height: 150)
                             .opacity(computerRotation < 90 ? 1 : 0)
                             .rotation3DEffect(.degrees(computerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-
+                        
                         // Back (revealed face) — visible for 90...180°
                         Image(viewModel.computerCard)
                             .resizable()
@@ -127,7 +153,11 @@ struct ContentView: View {
                 } else {
                     // Start Round Button
                     Button {
-                        startNewRound()
+                        if viewModel.remainingCards < 2 {
+                            viewModel.showReshuffleAlert = true
+                        } else {
+                            startNewRound()
+                        }
                     } label: {
                         Image("button")
                             .resizable()
@@ -137,7 +167,7 @@ struct ContentView: View {
                 }
                 
                 Spacer()
-                    
+                
                 HStack {
                     Spacer()
                     VStack{
@@ -161,6 +191,27 @@ struct ContentView: View {
                 .foregroundColor(.white)
             }
         }
+        // MARK: - SwiftData Initialization
+        .onAppear {
+            viewModel.modelContext = context
+            
+            let descriptor = FetchDescriptor<PlayingCard>()
+            let cardCount = (try? context.fetchCount(descriptor)) ?? 0
+            
+            if cardCount == 0 {
+                viewModel.resetDeck()
+            } else {
+                viewModel.updateCardCount()
+            }
+        }
+        .alert("Out of Cards!", isPresented: $viewModel.showReshuffleAlert) {
+                    Button("Reshuffle Deck", role: .none) {
+                        viewModel.resetDeck()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
+                }
     }
     
     @State private var isFirstPassed = false
@@ -179,7 +230,7 @@ struct ContentView: View {
             proceedDeal(with: phaseDuration)
         }
     }
-
+    
     private func proceedDeal(with phaseDuration: Double) {
         // Flip computer to 90° (hide front)
         withAnimation(.easeInOut(duration: phaseDuration)) {
@@ -201,7 +252,7 @@ struct ContentView: View {
     
     @State private var playerRotation: Double = 0
     @State private var computerRotation: Double = 0
-
+    
     private func handleGuess(_ guess: Guess) {
         // Animate to 90° (hide front), then swap content, then complete to 180°.
         withAnimation(.easeInOut(duration: phaseDuration)) {
@@ -218,5 +269,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .modelContainer(for: PlayingCard.self, inMemory: true)
 }
-
