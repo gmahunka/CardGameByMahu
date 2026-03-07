@@ -14,6 +14,6 @@ struct CardGameByMahuApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: PlayingCard.self)
+        .modelContainer(for: [PlayingCard.self, GameScore.self])
     }
 }

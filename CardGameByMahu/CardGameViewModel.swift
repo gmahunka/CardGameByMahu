@@ -29,12 +29,33 @@ final class CardGameViewModel: ObservableObject {
     
     private var computerValue: Int = 0
     private var playerValue: Int = 0
+    private var scoreRecord: GameScore?
     
     // We will pass this in from the View
     var modelContext: ModelContext?
     
-    // MARK: - Deck Management
+    // MARK: - Score Management
+    func loadScores() {
+        guard let context = modelContext else { return }
+        let descriptor = FetchDescriptor<GameScore>()
+        
+        // Try to find an existing score record
+        if let existingRecord = (try? context.fetch(descriptor))?.first {
+            scoreRecord = existingRecord
+            playerScore = existingRecord.playerScore
+            computerScore = existingRecord.computerScore
+        } else {
+            // If no record exists (first time playing), create one
+            let newRecord = GameScore(playerScore: 0, computerScore: 0)
+            context.insert(newRecord)
+            scoreRecord = newRecord
+            playerScore = 0
+            computerScore = 0
+            try? context.save()
+        }
+    }
     
+    // MARK: - Deck Management
     func updateCardCount() {
         guard let context = modelContext else { return }
         let descriptor = FetchDescriptor<PlayingCard>()
@@ -56,11 +77,15 @@ final class CardGameViewModel: ObservableObject {
         }
         
         // Save the fresh deck
+        playerScore = 0
+        computerScore = 0
+        scoreRecord?.playerScore = playerScore
+        scoreRecord?.computerScore = computerScore
+        
         try? context.save()
         updateCardCount()
         
-        playerScore = 0
-        computerScore = 0
+        
         
         computerCard = "back"
         playerCard = "back"
@@ -88,7 +113,6 @@ final class CardGameViewModel: ObservableObject {
     }
     
     // MARK: - Game Logic
-    
     func startRound() {
         // Draw a card for the computer. If the deck is empty, reset it.
         guard let newCardValue = drawCard() else {
@@ -129,10 +153,13 @@ final class CardGameViewModel: ObservableObject {
         // Award point
         if guessCorrect {
             playerScore += 1
+            scoreRecord?.playerScore = playerScore
         } else {
             computerScore += 1
+            scoreRecord?.computerScore = computerScore
         }
         
+        try? modelContext?.save()
         waitingForGuess = false
     }
 }

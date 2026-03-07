@@ -194,6 +194,7 @@ struct ContentView: View {
         // MARK: - SwiftData Initialization
         .onAppear {
             viewModel.modelContext = context
+            viewModel.loadScores()
             
             let descriptor = FetchDescriptor<PlayingCard>()
             let cardCount = (try? context.fetchCount(descriptor)) ?? 0
