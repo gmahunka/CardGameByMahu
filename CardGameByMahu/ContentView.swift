@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-
 struct ContentView: View {
     
     @StateObject private var viewModel = CardGameViewModel()
@@ -39,25 +38,44 @@ struct ContentView: View {
                     Spacer()
                     // Player Card
                     ZStack {
+                        // Front (hidden face/back) — visible for 0...89°
+                        Image("back")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 150)
+                            .opacity(playerRotation < 90 ? 1 : 0)
+                            .rotation3DEffect(.degrees(playerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+
+                        // Back (revealed face) — visible for 90...180°
                         Image(viewModel.playerCard)
                             .resizable()
                             .scaledToFit()
                             .frame(height: 150)
-                            .shadow(radius: 5)
+                            .opacity(playerRotation >= 90 ? 1 : 0)
+                            .rotation3DEffect(.degrees(playerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
                     }
-                    .rotation3DEffect(.degrees(viewModel.isPlayerFlipped ? 180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                    .animation(.easeInOut(duration: 0.4), value: viewModel.isPlayerFlipped)
+                    
                     Spacer()
-                    // Computer Card
+                    
+                    // Computer Card (two-sided flip)
                     ZStack {
+                        // Front (hidden face/back) — visible for 0...89°
+                        Image("back")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 150)
+                            .opacity(computerRotation < 90 ? 1 : 0)
+                            .rotation3DEffect(.degrees(computerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+
+                        // Back (revealed face) — visible for 90...180°
                         Image(viewModel.computerCard)
                             .resizable()
                             .scaledToFit()
                             .frame(height: 150)
-                            .shadow(radius: 5)
+                            .opacity(computerRotation >= 90 ? 1 : 0)
+                            .rotation3DEffect(.degrees(computerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
                     }
-                    .rotation3DEffect(.degrees(viewModel.isComputerFlipped ? 180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                    .animation(.easeInOut(duration: 0.4), value: viewModel.isComputerFlipped)
+                    
                     Spacer()
                 }
                 
@@ -146,42 +164,53 @@ struct ContentView: View {
     }
     
     @State private var isFirstPassed = false
+    let phaseDuration = 0.3
     
     private func startNewRound() {
-        // Flip computer card
-        withAnimation(.easeInOut(duration: 0.2)) {
-            viewModel.isComputerFlipped = true
+        // If computer is currently showing its back (180°), normalize to 0 first
+        if computerRotation >= 179 { // tolerate precision
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                computerRotation = 0
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
+                proceedDeal(with: phaseDuration)
+            }
+        } else {
+            proceedDeal(with: phaseDuration)
+        }
+    }
+
+    private func proceedDeal(with phaseDuration: Double) {
+        // Flip computer to 90° (hide front)
+        withAnimation(.easeInOut(duration: phaseDuration)) {
+            computerRotation = 90
             if isFirstPassed {
-                viewModel.isPlayerFlipped = true
+                // Ensure player's card is reset to front for new round
+                playerRotation = 0
             }
             isFirstPassed = true
         }
-        
-        // At midpoint, deal computer card
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        // Midpoint: deal and complete flip to reveal
+        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
             viewModel.startRound()
-            
-            // Complete flip animation
-            withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.isComputerFlipped = false
-                viewModel.isPlayerFlipped = false
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                computerRotation = 180
             }
         }
     }
     
+    @State private var playerRotation: Double = 0
+    @State private var computerRotation: Double = 0
+
     private func handleGuess(_ guess: Guess) {
-        // Flip player card
-        withAnimation(.easeInOut(duration: 0.2)) {
-            viewModel.isPlayerFlipped = true
+        // Animate to 90° (hide front), then swap content, then complete to 180°.
+        withAnimation(.easeInOut(duration: phaseDuration)) {
+            playerRotation = 90
         }
-        
-        // At midpoint, reveal player card and determine winner
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            viewModel.makeGuess(guess)
-            
-            // Complete flip animation
-            withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.isPlayerFlipped = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
+            viewModel.makeGuess(guess) // swap to revealed card content here
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                playerRotation = 180
             }
         }
     }
