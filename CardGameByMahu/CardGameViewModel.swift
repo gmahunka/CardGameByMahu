@@ -1,6 +1,12 @@
 import Foundation
 import Combine
 
+enum Guess {
+    case higher
+    case equal
+    case lower
+}
+
 @MainActor
 final class CardGameViewModel: ObservableObject {
     @Published var playerScore: Int = 0
@@ -9,27 +15,45 @@ final class CardGameViewModel: ObservableObject {
     @Published var computerCard: String = "back"
     @Published var isPlayerFlipped: Bool = false
     @Published var isComputerFlipped: Bool = false
+    @Published var waitingForGuess: Bool = false
     
-    private var lastPlayerValue: Int = 0
-    private var lastComputerValue: Int = 0
+    private var computerValue: Int = 0
+    private var playerValue: Int = 0
     
-    func dealFacesOnly() {
-        lastPlayerValue = Int.random(in: 2...14)
-        lastComputerValue = Int.random(in: 2...14)
-        playerCard = "card\(lastPlayerValue)"
-        computerCard = "card\(lastComputerValue)"
+    // Start a new round - computer draws a card
+    func startRound() {
+        computerValue = Int.random(in: 2...14)
+        computerCard = "card\(computerValue)"
+        playerCard = "back"
+        waitingForGuess = true
     }
     
-    func updateScoreFromLastDeal() {
-        if lastPlayerValue > lastComputerValue {
+    // Player makes a guess
+    func makeGuess(_ guess: Guess) {
+        guard waitingForGuess else { return }
+        
+        // Draw player's card
+        playerValue = Int.random(in: 2...14)
+        playerCard = "card\(playerValue)"
+        
+        // Determine if guess was correct
+        let guessCorrect: Bool
+        switch guess {
+        case .higher:
+            guessCorrect = playerValue > computerValue
+        case .equal:
+            guessCorrect = playerValue == computerValue
+        case .lower:
+            guessCorrect = playerValue < computerValue
+        }
+        
+        // Award point
+        if guessCorrect {
             playerScore += 1
-        } else if lastComputerValue > lastPlayerValue {
+        } else {
             computerScore += 1
         }
-    }
-    
-    func deal() {
-        dealFacesOnly()
-        updateScoreFromLastDeal()
+        
+        waitingForGuess = false
     }
 }

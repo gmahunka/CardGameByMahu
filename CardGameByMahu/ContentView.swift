@@ -37,6 +37,7 @@ struct ContentView: View {
                 // Cards
                 HStack(spacing: 20) {
                     Spacer()
+                    // Player Card
                     ZStack {
                         Image(viewModel.playerCard)
                             .resizable()
@@ -47,6 +48,7 @@ struct ContentView: View {
                     .rotation3DEffect(.degrees(viewModel.isPlayerFlipped ? 180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
                     .animation(.easeInOut(duration: 0.4), value: viewModel.isPlayerFlipped)
                     Spacer()
+                    // Computer Card
                     ZStack {
                         Image(viewModel.computerCard)
                             .resizable()
@@ -61,34 +63,61 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                Button {
-                    // Start flip to 90°
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewModel.isPlayerFlipped.toggle()
-                        viewModel.isComputerFlipped.toggle()
-                    }
-                    // Midpoint: swap faces only (no scoring yet)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        viewModel.dealFacesOnly()
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            // complete to 180° (already toggled once)
-                            viewModel.isPlayerFlipped.toggle()
-                            viewModel.isComputerFlipped.toggle()
+                // Button section - Three guess buttons or start button
+                if viewModel.waitingForGuess {
+                    // Three guess buttons
+                    HStack(spacing: 20) {
+                        // Lower Button
+                        Button {
+                            handleGuess(.lower)
+                        } label: {
+                            Text("Lower")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 100, height: 50)
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                                .shadow(radius: 3)
                         }
-                        // End: reset flip then update score from stored values
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                            viewModel.isPlayerFlipped = false
-                            viewModel.isComputerFlipped = false
-                            viewModel.updateScoreFromLastDeal()
+                        
+                        // Equal Button
+                        Button {
+                            handleGuess(.equal)
+                        } label: {
+                            Text("Equal")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 100, height: 50)
+                                .background(Color.green)
+                                .cornerRadius(10)
+                                .shadow(radius: 3)
+                        }
+                        
+                        // Higher Button
+                        Button {
+                            handleGuess(.higher)
+                        } label: {
+                            Text("Higher")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 100, height: 50)
+                                .background(Color.red)
+                                .cornerRadius(10)
+                                .shadow(radius: 3)
                         }
                     }
-                } label: {
-                    // Deal Button
-                    Image("button")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 50)
+                } else {
+                    // Start Round Button
+                    Button {
+                        startNewRound()
+                    } label: {
+                        Image("button")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 50)
+                    }
                 }
+                
                 Spacer()
                     
                 HStack {
@@ -112,6 +141,47 @@ struct ContentView: View {
                 }
                 .padding(.bottom, 50)
                 .foregroundColor(.white)
+            }
+        }
+    }
+    
+    @State private var isFirstPassed = false
+    
+    private func startNewRound() {
+        // Flip computer card
+        withAnimation(.easeInOut(duration: 0.2)) {
+            viewModel.isComputerFlipped = true
+            if isFirstPassed {
+                viewModel.isPlayerFlipped = true
+            }
+            isFirstPassed = true
+        }
+        
+        // At midpoint, deal computer card
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            viewModel.startRound()
+            
+            // Complete flip animation
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewModel.isComputerFlipped = false
+                viewModel.isPlayerFlipped = false
+            }
+        }
+    }
+    
+    private func handleGuess(_ guess: Guess) {
+        // Flip player card
+        withAnimation(.easeInOut(duration: 0.2)) {
+            viewModel.isPlayerFlipped = true
+        }
+        
+        // At midpoint, reveal player card and determine winner
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            viewModel.makeGuess(guess)
+            
+            // Complete flip animation
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewModel.isPlayerFlipped = false
             }
         }
     }
