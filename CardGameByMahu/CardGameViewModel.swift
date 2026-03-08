@@ -34,6 +34,20 @@ final class CardGameViewModel: ObservableObject {
     // We will pass this in from the View
     var modelContext: ModelContext?
     
+    func setupGame(context: ModelContext) {
+        self.modelContext = context
+        loadScores()
+        
+        // Move the "is the deck empty?" check here
+        let descriptor = FetchDescriptor<PlayingCard>()
+        let cardCount = (try? context.fetchCount(descriptor)) ?? 0
+        if cardCount == 0 {
+            resetDeck()
+        } else {
+            updateCardCount()
+        }
+    }
+    
     // MARK: - Score Management
     func loadScores() {
         guard let context = modelContext else { return }

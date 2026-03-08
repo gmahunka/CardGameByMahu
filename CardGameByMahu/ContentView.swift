@@ -191,19 +191,8 @@ struct ContentView: View {
                 .foregroundColor(.white)
             }
         }
-        // MARK: - SwiftData Initialization
         .onAppear {
-            viewModel.modelContext = context
-            viewModel.loadScores()
-            
-            let descriptor = FetchDescriptor<PlayingCard>()
-            let cardCount = (try? context.fetchCount(descriptor)) ?? 0
-            
-            if cardCount == 0 {
-                viewModel.resetDeck()
-            } else {
-                viewModel.updateCardCount()
-            }
+            viewModel.setupGame(context: context)
         }
         .alert("Out of Cards!", isPresented: $viewModel.showReshuffleAlert) {
                     Button("Reshuffle Deck", role: .none) {
