@@ -12,6 +12,7 @@ struct ContentView: View {
     
     @Environment(\.modelContext) private var context
     @StateObject private var viewModel = CardGameViewModel()
+    @State private var showingRules = false
     
     var body: some View {
         
@@ -25,14 +26,31 @@ struct ContentView: View {
             // Semi-transparent overlay for better UI contrast
             Color.black.opacity(0.15)
                 .ignoresSafeArea()
-            
             VStack() {
+                
+                HStack {
+                    Spacer()
+                    // Info Button
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingRules = true
+                        }
+                    } label: {
+                        Image(systemName: "info.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 20)
+                    .padding(.top, 10)
+                }
+                
                 // Logo
                 Image("emeles")
                     .resizable()
                     .scaledToFit()
                     .frame(height: 200)
-                    .padding(.top, 30)
+                    .padding(.top, 20)
                 HStack {
                     Text("Cards in Deck: \(viewModel.remainingCards)")
                         .font(.headline)
@@ -195,13 +213,51 @@ struct ContentView: View {
             viewModel.setupGame(context: context)
         }
         .alert("Out of Cards!", isPresented: $viewModel.showReshuffleAlert) {
-                    Button("Reshuffle Deck", role: .none) {
-                        viewModel.resetDeck()
+            Button("Reshuffle Deck", role: .none) {
+                viewModel.resetDeck()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
+        }
+        .overlay {
+            if showingRules {
+                ZStack {
+                    // Full screen shading
+                    Color.black.opacity(0.6)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation { showingRules = false }
+                        }
+                    
+                    // Rules Card
+                    VStack(spacing: 20) {
+                        Text("Game Rules")
+                            .font(.title).bold()
+                        
+                        VStack(alignment: .leading, spacing: 16) {
+                            RuleItem(icon: "1.circle", text: "The computer deals a card. You must guess if your next card is higher, lower, or equal.")
+                            RuleItem(icon: "2.circle", text: "Correct guesses earn you a point. Incorrect guesses give a point to the computer.")
+                            RuleItem(icon: "3.circle", text: "The game continues until the deck is empty. You can reshuffle at any time, but it will also reset the scores.")
+                        }
+                        .frame(maxWidth: 350) // Controls text width for better wrapping
+                        
+                        Button("Dismiss") {
+                            withAnimation { showingRules = false }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 10)
                     }
-                    Button("Cancel", role: .cancel) { }
-                } message: {
-                    Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
+                    .padding(40)
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(Color(NSColor.windowBackgroundColor))
+                            .shadow(color: .black.opacity(0.3), radius: 20)
+                    )
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
+            }
+        }
     }
     
     @State private var isFirstPassed = false
@@ -253,6 +309,26 @@ struct ContentView: View {
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 playerRotation = 180
             }
+        }
+    }
+}
+
+// Helper View for wrapping text
+struct RuleItem: View {
+    var icon: String
+    var text: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.orange)
+                .font(.headline)
+            
+            Text(text)
+                .font(.body)
+                .lineLimit(nil)            // Allows unlimited lines
+                .fixedSize(horizontal: false, vertical: true) // Forces vertical expansion instead of horizontal
+                .multilineTextAlignment(.leading)
         }
     }
 }
