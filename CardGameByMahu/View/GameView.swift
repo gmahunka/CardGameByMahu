@@ -11,7 +11,7 @@ import SwiftData
 struct GameView: View {
     
     @Environment(\.modelContext) private var context
-    @StateObject private var viewModel = CardGameViewModel()
+    @State private var viewModel = CardGameViewModel()
     @State private var showingRules = false
     
     var body: some View {

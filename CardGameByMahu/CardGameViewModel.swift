@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import SwiftData
+import Observation
 
 enum Guess {
     case higher
@@ -15,23 +16,24 @@ enum Guess {
     case lower
 }
 
+@Observable
 @MainActor
-final class CardGameViewModel: ObservableObject {
-    @Published var playerScore: Int = 0
-    @Published var computerScore: Int = 0
-    @Published var remainingCards: Int = 0
-    @Published var playerCard: String = "back"
-    @Published var computerCard: String = "back"
-    @Published var isPlayerFlipped: Bool = false
-    @Published var isComputerFlipped: Bool = false
-    @Published var showReshuffleAlert: Bool = false
-    @Published var waitingForGuess: Bool = false
+final class CardGameViewModel {
+    
+    var playerScore: Int = 0
+    var computerScore: Int = 0
+    var remainingCards: Int = 0
+    var playerCard: String = "back"
+    var computerCard: String = "back"
+    var isPlayerFlipped: Bool = false
+    var isComputerFlipped: Bool = false
+    var showReshuffleAlert: Bool = false
+    var waitingForGuess: Bool = false
     
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
     
-    // We will pass this in from the View
     var modelContext: ModelContext?
     
     func setupGame(context: ModelContext) {
