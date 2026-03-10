@@ -1,14 +1,14 @@
 //
-//  ContentView.swift
+//  GameView.swift
 //  CardGameByMahu
 //
-//  Created by Gergo Mahunka on 2026. 03. 01..
+//  Created by Gergo Mahunka on 2026. 03. 09..
 //
 
 import SwiftUI
 import SwiftData
 
-struct ContentView: View {
+struct GameView: View {
     
     @Environment(\.modelContext) private var context
     @StateObject private var viewModel = CardGameViewModel()
@@ -337,3 +337,4 @@ struct RuleItem: View {
     ContentView()
         .modelContainer(for: PlayingCard.self, inMemory: true)
 }
+
