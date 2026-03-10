@@ -42,14 +42,14 @@ struct GameView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing, 20)
-                    .padding(.top, 10)
+                    .padding(.top, 40)
                 }
                 
                 // Logo
                 Image("emeles")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 200)
+                    .frame(minHeight: 80, idealHeight: 150, maxHeight: 200)
                     .padding(.top, 20)
                 HStack {
                     Text("Cards in Deck: \(viewModel.remainingCards)")

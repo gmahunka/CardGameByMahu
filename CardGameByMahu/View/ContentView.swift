@@ -11,14 +11,15 @@ import SwiftData
 struct ContentView: View {
     var body: some View {
         TabView {
-            GameView()
-                .tabItem {
-                    Label("Play", systemImage: "play.circle.fill")
-                }
             
             SetupView()
                 .tabItem {
                     Label("Setup", systemImage: "slider.horizontal.3")
+                }
+            
+            GameView()
+                .tabItem {
+                    Label("Play", systemImage: "play.circle.fill")
                 }
             
             HistoryView()
@@ -26,7 +27,6 @@ struct ContentView: View {
                     Label("History", systemImage: "list.clipboard.fill")
                 }
         }
-        // Optional: Change the accent color of the selected tab to match your game's theme
         .tint(.orange)
     }
 }
