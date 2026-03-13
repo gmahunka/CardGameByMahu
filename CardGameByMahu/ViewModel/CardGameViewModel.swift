@@ -35,6 +35,7 @@ final class CardGameViewModel {
     var isComputerFlipped: Bool = false
     var showReshuffleAlert: Bool = false
     var waitingForGuess: Bool = false
+    var roundHistory: [RoundHistoryItem] = []
     
     private var computerValue: Int = 0
     private var playerValue: Int = 0
@@ -114,6 +115,7 @@ final class CardGameViewModel {
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
+        roundHistory.removeAll()
     }
     
     private func drawCard() -> Int? {
@@ -153,7 +155,9 @@ final class CardGameViewModel {
     
     func makeGuess(_ guess: Guess) {
         guard waitingForGuess else { return }
-        
+
+        let chances = calculateChances(for: computerValue)
+
         // Draw player's card
         guard let newCardValue = drawCard() else {
             // Handle empty deck mid-round if necessary
@@ -173,6 +177,20 @@ final class CardGameViewModel {
         case .lower:
             guessCorrect = playerValue < computerValue
         }
+
+        let playerChoiceText = displayText(for: guess)
+        let correctAnswerText = correctAnswerText(computer: computerValue, player: playerValue)
+        let round = RoundHistoryItem(
+            computerCard: "card\(computerValue)",
+            playerCard: "card\(playerValue)",
+            playerChoice: playerChoiceText,
+            correctAnswer: correctAnswerText,
+            wasCorrect: guessCorrect,
+            higherChance: chances.higher,
+            equalChance: chances.equal,
+            lowerChance: chances.lower
+        )
+        roundHistory.insert(round, at: 0)
         
         // Award point
         if guessCorrect {
@@ -185,5 +203,40 @@ final class CardGameViewModel {
         
         try? modelContext?.save()
         waitingForGuess = false
+    }
+
+    private func displayText(for guess: Guess) -> String {
+        switch guess {
+        case .higher:
+            return "Higher"
+        case .equal:
+            return "Equal"
+        case .lower:
+            return "Lower"
+        }
+    }
+
+    private func correctAnswerText(computer: Int, player: Int) -> String {
+        if player > computer { return "Higher" }
+        if player < computer { return "Lower" }
+        return "Equal"
+    }
+
+    private func calculateChances(for computer: Int) -> (higher: Double, equal: Double, lower: Double) {
+        guard let context = modelContext else {
+            return (higher: 0, equal: 0, lower: 0)
+        }
+
+        let descriptor = FetchDescriptor<PlayingCard>()
+        guard let cards = try? context.fetch(descriptor), !cards.isEmpty else {
+            return (higher: 0, equal: 0, lower: 0)
+        }
+
+        let total = Double(cards.count)
+        let higher = Double(cards.filter { $0.value > computer }.count) / total
+        let equal = Double(cards.filter { $0.value == computer }.count) / total
+        let lower = Double(cards.filter { $0.value < computer }.count) / total
+
+        return (higher: higher, equal: equal, lower: lower)
     }
 }
