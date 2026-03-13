@@ -7,16 +7,10 @@
 
 import SwiftUI
 
-// A helper struct to track the desired count for each card value
-struct CardConfiguration: Identifiable {
-    let id: Int // Card value (2...14)
-    var count: Int
-}
-
 struct SetupView: View {
-    // Initialize with a standard deck (4 of each card)
-    @State private var cardConfigs: [CardConfiguration] = (2...14).map { CardConfiguration(id: $0, count: 4) }
-    
+    @Bindable var viewModel: SetupViewModel
+    let onApply: () -> Void
+
     var body: some View {
         VStack {
             // Header
@@ -30,7 +24,7 @@ struct SetupView: View {
 
             // 1. Regular Deck Option
             Button(action: {
-                setToRegularDeck()
+                viewModel.resetToRegularDeck()
             }) {
                 HStack {
                     Image(systemName: "suit.spade.fill")
@@ -47,7 +41,7 @@ struct SetupView: View {
             .padding(.bottom, 5)
             
             // 2. List of Cards with input boxes
-            List($cardConfigs) { $config in
+            List(viewModel.cardConfigs) { config in
                 HStack(alignment: .center) {
                     Spacer(minLength: 0)
 
@@ -61,7 +55,7 @@ struct SetupView: View {
 
 
                     Button(action: {
-                        if config.count > 0 { config.count -= 1 }
+                        viewModel.decreaseCount(for: config.id)
                     }) {
                         Image(systemName: "minus.circle.fill")
                             .font(.system(size: 26, weight: .semibold))
@@ -71,13 +65,20 @@ struct SetupView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Decrease quantity")
 
-                    TextField("Count", value: $config.count, format: .number)
+                    TextField(
+                        "Count",
+                        value: Binding(
+                            get: { config.count },
+                            set: { newValue in viewModel.updateCount(config.id, count: newValue) }
+                        ),
+                        format: .number
+                    )
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 60)
                         .multilineTextAlignment(.center)
 
                     Button(action: {
-                        if config.count < 12 { config.count += 1 }
+                        viewModel.increaseCount(for: config.id)
                     }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 26, weight: .semibold))
@@ -93,10 +94,9 @@ struct SetupView: View {
             }
             .listStyle(.plain)
             
-            // 3. Apply Button (To hook up later)
+            // 3. Apply Button
             Button(action: {
-                // Here is where you'll pass cardConfigs to your ViewModel
-                print("Ready to generate deck with these configs!")
+                onApply()
             }) {
                 Text("Save & Apply")
                     .font(.title3)
@@ -110,14 +110,4 @@ struct SetupView: View {
             .padding()
         }
     }
-    
-    // MARK: - Helpers
-    
-    private func setToRegularDeck() {
-        // Iterate through the array and reset all counts to 4
-        for index in cardConfigs.indices {
-            cardConfigs[index].count = 4
-        }
-    }
 }
-

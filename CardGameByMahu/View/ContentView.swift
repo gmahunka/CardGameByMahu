@@ -9,15 +9,28 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @State private var deckSettings = DeckSettings()
+    @State private var setupViewModel: SetupViewModel
+    @State private var gameViewModel: CardGameViewModel
+
+    init() {
+        let sharedDeckSettings = DeckSettings()
+        _deckSettings = State(initialValue: sharedDeckSettings)
+        _setupViewModel = State(initialValue: SetupViewModel(deckSettings: sharedDeckSettings))
+        _gameViewModel = State(initialValue: CardGameViewModel(deckSettings: sharedDeckSettings))
+    }
+
     var body: some View {
         TabView {
             
-            SetupView()
+            SetupView(viewModel: setupViewModel, onApply: {
+                gameViewModel.resetDeck()
+            })
                 .tabItem {
                     Label("Setup", systemImage: "slider.horizontal.3")
                 }
             
-            GameView()
+            GameView(viewModel: gameViewModel)
                 .tabItem {
                     Label("Play", systemImage: "play.circle.fill")
                 }

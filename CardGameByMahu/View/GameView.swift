@@ -11,7 +11,7 @@ import SwiftData
 struct GameView: View {
     
     @Environment(\.modelContext) private var context
-    @State private var viewModel = CardGameViewModel()
+    @Bindable var viewModel: CardGameViewModel
     @State private var showingRules = false
     
     var body: some View {
@@ -337,4 +337,3 @@ struct RuleItem: View {
     ContentView()
         .modelContainer(for: PlayingCard.self, inMemory: true)
 }
-

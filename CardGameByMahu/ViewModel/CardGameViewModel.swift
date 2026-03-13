@@ -20,6 +20,12 @@ enum Guess {
 @MainActor
 final class CardGameViewModel {
     
+    private let deckSettings: DeckSettings
+
+    init(deckSettings: DeckSettings) {
+        self.deckSettings = deckSettings
+    }
+
     var playerScore: Int = 0
     var computerScore: Int = 0
     var remainingCards: Int = 0
@@ -84,9 +90,11 @@ final class CardGameViewModel {
         // 1. Clear out any existing cards in the database
         try? context.delete(model: PlayingCard.self)
         
-        // 2. Create 4 of each card (values 2 through 14)
-        for value in 2...14 {
-            for _ in 1...4 { // DEBUG
+        // 2. Build the deck from current setup configuration
+        for value in DeckSettings.minCardValue...DeckSettings.maxCardValue {
+            let count = deckSettings.count(for: value)
+            guard count > 0 else { continue }
+            for _ in 0..<count {
                 let newCard = PlayingCard(value: value)
                 context.insert(newCard)
             }
