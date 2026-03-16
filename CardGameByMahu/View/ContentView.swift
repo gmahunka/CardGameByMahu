@@ -9,13 +9,11 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @State private var deckSettings = DeckSettings()
     @State private var setupViewModel: SetupViewModel
     @State private var gameViewModel: CardGameViewModel
 
     init() {
         let sharedDeckSettings = DeckSettings()
-        _deckSettings = State(initialValue: sharedDeckSettings)
         _setupViewModel = State(initialValue: SetupViewModel(deckSettings: sharedDeckSettings))
         _gameViewModel = State(initialValue: CardGameViewModel(deckSettings: sharedDeckSettings))
     }
