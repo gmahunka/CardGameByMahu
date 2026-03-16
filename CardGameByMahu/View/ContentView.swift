@@ -35,7 +35,7 @@ struct ContentView: View {
                     Label("Play", systemImage: "play.circle.fill")
                 }
             
-            HistoryView(viewModel: gameViewModel)
+            HistoryView()
                 .tabItem {
                     Label("History", systemImage: "list.clipboard.fill")
                 }

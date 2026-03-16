@@ -6,15 +6,42 @@
 //
 
 import Foundation
+import SwiftData
 
-struct RoundHistoryItem: Identifiable {
-    let id = UUID()
-    let computerCard: String
-    let playerCard: String
-    let playerChoice: String
-    let correctAnswer: String
-    let wasCorrect: Bool
-    let higherChance: Double
-    let equalChance: Double
-    let lowerChance: Double
+@Model
+final class RoundHistoryItem {
+    @Attribute(.unique) var id: UUID
+    var computerCard: String
+    var playerCard: String
+    var playerChoice: String
+    var correctAnswer: String
+    var wasCorrect: Bool
+    var higherChance: Double
+    var equalChance: Double
+    var lowerChance: Double
+    var createdAt: Date
+
+    init(
+        id: UUID = UUID(),
+        computerCard: String,
+        playerCard: String,
+        playerChoice: String,
+        correctAnswer: String,
+        wasCorrect: Bool,
+        higherChance: Double,
+        equalChance: Double,
+        lowerChance: Double,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.computerCard = computerCard
+        self.playerCard = playerCard
+        self.playerChoice = playerChoice
+        self.correctAnswer = correctAnswer
+        self.wasCorrect = wasCorrect
+        self.higherChance = higherChance
+        self.equalChance = equalChance
+        self.lowerChance = lowerChance
+        self.createdAt = createdAt
+    }
 }

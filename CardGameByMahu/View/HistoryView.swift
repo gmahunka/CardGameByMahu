@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HistoryView: View {
-    @Bindable var viewModel: CardGameViewModel
+    @Query(sort: \RoundHistoryItem.createdAt, order: .reverse) private var history: [RoundHistoryItem]
+    private let viewModel = HistoryViewModel()
 
     var body: some View {
         VStack(spacing: 16) {
@@ -21,7 +23,7 @@ struct HistoryView: View {
             }
             .padding(.top)
 
-            if viewModel.roundHistory.isEmpty {
+            if history.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "list.clipboard")
                         .font(.system(size: 40))
@@ -34,7 +36,7 @@ struct HistoryView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(viewModel.roundHistory) { round in
+                List(viewModel.rows(from: history)) { row in
                     VStack(spacing: 12) {
                         // Cards row
                         HStack(spacing: 24) {
@@ -43,7 +45,7 @@ struct HistoryView: View {
                                 Text("Player")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Image(round.playerCard)
+                                Image(row.playerCard)
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 60, height: 88)
@@ -53,7 +55,7 @@ struct HistoryView: View {
                                 Text("Computer")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Image(round.computerCard)
+                                Image(row.computerCard)
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 60, height: 88)
@@ -65,42 +67,27 @@ struct HistoryView: View {
                         // Result row
                         HStack(spacing: 16) {
                             Spacer()
-                            Label(
-                                round.wasCorrect ? "Correct" : "Wrong",
-                                systemImage: round.wasCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
-                            )
-                            .font(.subheadline.weight(.bold))
-                            .foregroundColor(round.wasCorrect ? .green : .red)
-
-                           
+                            Label(row.resultTitle, systemImage: row.resultSystemImage)
+                                .font(.subheadline.weight(.bold))
+                                .foregroundColor(row.resultColor)
                             Spacer()
                         }
 
                         // Chances row
                         VStack(spacing: 6) {
-//                            Text("Chances before draw")
-//                                .font(.caption)
-//                                .foregroundColor(.secondary)
                             HStack(spacing: 8) {
                                 Spacer()
-                                chancePill(
-                                    title: "Lower",
-                                    value: round.lowerChance,
-                                    isEmphasized: round.playerChoice == "Lower",
-                                    isCorrectAnswer: round.correctAnswer == "Lower"
-                                )
-                                chancePill(
-                                    title: "Equal",
-                                    value: round.equalChance,
-                                    isEmphasized: round.playerChoice == "Equal",
-                                    isCorrectAnswer: round.correctAnswer == "Equal"
-                                )
-                                chancePill(
-                                    title: "Higher",
-                                    value: round.higherChance,
-                                    isEmphasized: round.playerChoice == "Higher",
-                                    isCorrectAnswer: round.correctAnswer == "Higher"
-                                )
+                                ForEach(row.pills) { pill in
+                                    Text(pill.text)
+                                        .font(.caption.weight(pill.isEmphasized ? .bold : .regular))
+                                        .foregroundColor(pill.foregroundColor)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 5)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(pill.backgroundColor)
+                                        )
+                                }
                                 Spacer()
                             }
                         }
@@ -113,7 +100,7 @@ struct HistoryView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(round.wasCorrect ? Color.green.opacity(0.6) : Color.red.opacity(0.5), lineWidth: 1.5)
+                            .stroke(row.borderColor, lineWidth: 1.5)
                     )
                     .padding(.vertical, 6)
                 }
@@ -121,22 +108,5 @@ struct HistoryView: View {
             }
         }
         .padding(.horizontal)
-    }
-
-    private func chancePill(title: String, value: Double, isEmphasized: Bool, isCorrectAnswer: Bool) -> some View {
-        let percent = Int((value * 100).rounded())
-        return Text("\(title): \(percent)%")
-            .font(.caption.weight(isEmphasized ? .bold : .regular))
-            .foregroundColor(isEmphasized ? .white : .primary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        isEmphasized
-                        ? (isCorrectAnswer ? Color.green : Color.red)
-                        : Color.gray.opacity(0.2)
-                    )
-            )
     }
 }

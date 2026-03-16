@@ -18,6 +18,6 @@ struct CardGameByMahuApp: App {
                 .frame(minHeight: 700)
         }
         .windowResizability(.contentSize)
-        .modelContainer(for: [PlayingCard.self, GameScore.self])
+        .modelContainer(for: [PlayingCard.self, GameScore.self, RoundHistoryItem.self])
     }
 }

@@ -35,8 +35,7 @@ final class CardGameViewModel {
     var isComputerFlipped: Bool = false
     var showReshuffleAlert: Bool = false
     var waitingForGuess: Bool = false
-    var roundHistory: [RoundHistoryItem] = []
-    
+
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
@@ -115,7 +114,10 @@ final class CardGameViewModel {
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
-        roundHistory.removeAll()
+
+        // Reshuffle starts a new game session, so clear persisted round history.
+        try? context.delete(model: RoundHistoryItem.self)
+        try? context.save()
     }
     
     private func drawCard() -> Int? {
@@ -190,8 +192,8 @@ final class CardGameViewModel {
             equalChance: chances.equal,
             lowerChance: chances.lower
         )
-        roundHistory.insert(round, at: 0)
-        
+        modelContext?.insert(round)
+
         // Award point
         if guessCorrect {
             playerScore += 1
