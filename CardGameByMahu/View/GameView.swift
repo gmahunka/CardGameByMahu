@@ -1,17 +1,17 @@
 //
-//  ContentView.swift
+//  GameView.swift
 //  CardGameByMahu
 //
-//  Created by Gergo Mahunka on 2026. 03. 01..
+//  Created by Gergo Mahunka on 2026. 03. 09..
 //
 
 import SwiftUI
 import SwiftData
 
-struct ContentView: View {
+struct GameView: View {
     
     @Environment(\.modelContext) private var context
-    @StateObject private var viewModel = CardGameViewModel()
+    @Bindable var viewModel: CardGameViewModel
     @State private var showingRules = false
     
     var body: some View {
@@ -42,14 +42,14 @@ struct ContentView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing, 20)
-                    .padding(.top, 10)
+                    .padding(.top, 40)
                 }
                 
                 // Logo
                 Image("emeles")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 200)
+                    .frame(minHeight: 80, idealHeight: 150, maxHeight: 200)
                     .padding(.top, 20)
                 HStack {
                     Text("Cards in Deck: \(viewModel.remainingCards)")

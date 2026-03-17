@@ -8,30 +8,46 @@
 import Foundation
 import Combine
 import SwiftData
+import Observation
 
 enum Guess {
     case higher
     case equal
     case lower
+
+    var option: GuessOption {
+        switch self {
+        case .higher: return .higher
+        case .equal: return .equal
+        case .lower: return .lower
+        }
+    }
 }
 
+@Observable
 @MainActor
-final class CardGameViewModel: ObservableObject {
-    @Published var playerScore: Int = 0
-    @Published var computerScore: Int = 0
-    @Published var remainingCards: Int = 0
-    @Published var playerCard: String = "back"
-    @Published var computerCard: String = "back"
-    @Published var isPlayerFlipped: Bool = false
-    @Published var isComputerFlipped: Bool = false
-    @Published var showReshuffleAlert: Bool = false
-    @Published var waitingForGuess: Bool = false
+final class CardGameViewModel {
     
+    private let deckSettings: DeckSettings
+
+    init(deckSettings: DeckSettings) {
+        self.deckSettings = deckSettings
+    }
+
+    var playerScore: Int = 0
+    var computerScore: Int = 0
+    var remainingCards: Int = 0
+    var playerCard: String = "back"
+    var computerCard: String = "back"
+    var isPlayerFlipped: Bool = false
+    var isComputerFlipped: Bool = false
+    var showReshuffleAlert: Bool = false
+    var waitingForGuess: Bool = false
+
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
     
-    // We will pass this in from the View
     var modelContext: ModelContext?
     
     func setupGame(context: ModelContext) {
@@ -82,9 +98,11 @@ final class CardGameViewModel: ObservableObject {
         // 1. Clear out any existing cards in the database
         try? context.delete(model: PlayingCard.self)
         
-        // 2. Create 4 of each card (values 2 through 14)
-        for value in 2...14 {
-            for _ in 1...4 { // DEBUG
+        // 2. Build the deck from current setup configuration
+        for value in DeckSettings.minCardValue...DeckSettings.maxCardValue {
+            let count = deckSettings.count(for: value)
+            guard count > 0 else { continue }
+            for _ in 0..<count {
                 let newCard = PlayingCard(value: value)
                 context.insert(newCard)
             }
@@ -104,6 +122,10 @@ final class CardGameViewModel: ObservableObject {
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
+
+        // Reshuffle starts a new game session, so clear persisted round history.
+        try? context.delete(model: RoundHistoryItem.self)
+        try? context.save()
     }
     
     private func drawCard() -> Int? {
@@ -143,27 +165,36 @@ final class CardGameViewModel: ObservableObject {
     
     func makeGuess(_ guess: Guess) {
         guard waitingForGuess else { return }
-        
+
+        let chances = calculateChances(for: computerValue)
+
         // Draw player's card
         guard let newCardValue = drawCard() else {
             // Handle empty deck mid-round if necessary
             return
         }
-        
+
         playerValue = newCardValue
         playerCard = "card\(playerValue)"
-        
-        // Determine if guess was correct
-        let guessCorrect: Bool
-        switch guess {
-        case .higher:
-            guessCorrect = playerValue > computerValue
-        case .equal:
-            guessCorrect = playerValue == computerValue
-        case .lower:
-            guessCorrect = playerValue < computerValue
-        }
-        
+
+        let playerChoiceOption = guess.option
+        let correctAnswerOption = correctAnswerOption(computer: computerValue, player: playerValue)
+
+        // Determine if guess was correct using stable values
+        let guessCorrect = playerChoiceOption == correctAnswerOption
+
+        let round = RoundHistoryItem(
+            computerCard: "card\(computerValue)",
+            playerCard: "card\(playerValue)",
+            playerChoiceOption: playerChoiceOption,
+            correctAnswerOption: correctAnswerOption,
+            wasCorrect: guessCorrect,
+            higherChance: chances.higher,
+            equalChance: chances.equal,
+            lowerChance: chances.lower
+        )
+        modelContext?.insert(round)
+
         // Award point
         if guessCorrect {
             playerScore += 1
@@ -172,8 +203,32 @@ final class CardGameViewModel: ObservableObject {
             computerScore += 1
             scoreRecord?.computerScore = computerScore
         }
-        
+
         try? modelContext?.save()
         waitingForGuess = false
+    }
+
+    private func correctAnswerOption(computer: Int, player: Int) -> GuessOption {
+        if player > computer { return .higher }
+        if player < computer { return .lower }
+        return .equal
+    }
+
+    private func calculateChances(for computer: Int) -> (higher: Double, equal: Double, lower: Double) {
+        guard let context = modelContext else {
+            return (higher: 0, equal: 0, lower: 0)
+        }
+
+        let descriptor = FetchDescriptor<PlayingCard>()
+        guard let cards = try? context.fetch(descriptor), !cards.isEmpty else {
+            return (higher: 0, equal: 0, lower: 0)
+        }
+
+        let total = Double(cards.count)
+        let higher = Double(cards.filter { $0.value > computer }.count) / total
+        let equal = Double(cards.filter { $0.value == computer }.count) / total
+        let lower = Double(cards.filter { $0.value < computer }.count) / total
+
+        return (higher: higher, equal: equal, lower: lower)
     }
 }

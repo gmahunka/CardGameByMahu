@@ -1,5 +1,5 @@
 //
-//  Score.swift
+//  ScoreCount.swift
 //  CardGameByMahu
 //
 //  Created by Gergo Mahunka on 2026. 03. 07..
