@@ -14,6 +14,14 @@ enum Guess {
     case higher
     case equal
     case lower
+
+    var option: GuessOption {
+        switch self {
+        case .higher: return .higher
+        case .equal: return .equal
+        case .lower: return .lower
+        }
+    }
 }
 
 @Observable
@@ -165,28 +173,21 @@ final class CardGameViewModel {
             // Handle empty deck mid-round if necessary
             return
         }
-        
+
         playerValue = newCardValue
         playerCard = "card\(playerValue)"
-        
-        // Determine if guess was correct
-        let guessCorrect: Bool
-        switch guess {
-        case .higher:
-            guessCorrect = playerValue > computerValue
-        case .equal:
-            guessCorrect = playerValue == computerValue
-        case .lower:
-            guessCorrect = playerValue < computerValue
-        }
 
-        let playerChoiceText = displayText(for: guess)
-        let correctAnswerText = correctAnswerText(computer: computerValue, player: playerValue)
+        let playerChoiceOption = guess.option
+        let correctAnswerOption = correctAnswerOption(computer: computerValue, player: playerValue)
+
+        // Determine if guess was correct using stable values
+        let guessCorrect = playerChoiceOption == correctAnswerOption
+
         let round = RoundHistoryItem(
             computerCard: "card\(computerValue)",
             playerCard: "card\(playerValue)",
-            playerChoice: playerChoiceText,
-            correctAnswer: correctAnswerText,
+            playerChoiceOption: playerChoiceOption,
+            correctAnswerOption: correctAnswerOption,
             wasCorrect: guessCorrect,
             higherChance: chances.higher,
             equalChance: chances.equal,
@@ -202,26 +203,15 @@ final class CardGameViewModel {
             computerScore += 1
             scoreRecord?.computerScore = computerScore
         }
-        
+
         try? modelContext?.save()
         waitingForGuess = false
     }
 
-    private func displayText(for guess: Guess) -> String {
-        switch guess {
-        case .higher:
-            return "Higher"
-        case .equal:
-            return "Equal"
-        case .lower:
-            return "Lower"
-        }
-    }
-
-    private func correctAnswerText(computer: Int, player: Int) -> String {
-        if player > computer { return "Higher" }
-        if player < computer { return "Lower" }
-        return "Equal"
+    private func correctAnswerOption(computer: Int, player: Int) -> GuessOption {
+        if player > computer { return .higher }
+        if player < computer { return .lower }
+        return .equal
     }
 
     private func calculateChances(for computer: Int) -> (higher: Double, equal: Double, lower: Double) {

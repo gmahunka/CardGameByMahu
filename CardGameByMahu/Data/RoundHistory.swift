@@ -8,25 +8,49 @@
 import Foundation
 import SwiftData
 
+enum GuessOption: String, Codable {
+    case higher = "higher"
+    case equal = "equal"
+    case lower = "lower"
+    
+    var displayText: String {
+        switch self {
+        case .higher: return "Higher"
+        case .equal: return "Equal"
+        case .lower: return "Lower"
+        }
+    }
+}
+
 @Model
 final class RoundHistoryItem {
     @Attribute(.unique) var id: UUID
     var computerCard: String
     var playerCard: String
-    var playerChoice: String
-    var correctAnswer: String
+    var playerChoiceRaw: String
+    var correctAnswerRaw: String
     var wasCorrect: Bool
     var higherChance: Double
     var equalChance: Double
     var lowerChance: Double
     var createdAt: Date
 
+    var playerChoiceOption: GuessOption? {
+        get { GuessOption(rawValue: playerChoiceRaw) }
+        set { playerChoiceRaw = newValue?.rawValue ?? "" }
+    }
+
+    var correctAnswerOption: GuessOption? {
+        get { GuessOption(rawValue: correctAnswerRaw) }
+        set { correctAnswerRaw = newValue?.rawValue ?? "" }
+    }
+
     init(
         id: UUID = UUID(),
         computerCard: String,
         playerCard: String,
-        playerChoice: String,
-        correctAnswer: String,
+        playerChoiceOption: GuessOption,
+        correctAnswerOption: GuessOption,
         wasCorrect: Bool,
         higherChance: Double,
         equalChance: Double,
@@ -36,8 +60,8 @@ final class RoundHistoryItem {
         self.id = id
         self.computerCard = computerCard
         self.playerCard = playerCard
-        self.playerChoice = playerChoice
-        self.correctAnswer = correctAnswer
+        self.playerChoiceRaw = playerChoiceOption.rawValue
+        self.correctAnswerRaw = correctAnswerOption.rawValue
         self.wasCorrect = wasCorrect
         self.higherChance = higherChance
         self.equalChance = equalChance

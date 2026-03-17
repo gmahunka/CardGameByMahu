@@ -25,6 +25,8 @@ final class HistoryViewModel {
     func rows(from rounds: [RoundHistoryItem]) -> [RowViewData] {
         rounds.map { round in
             let isCorrect = round.wasCorrect
+            let playerChoice = round.playerChoiceOption
+            let correctAnswer = round.correctAnswerOption
 
             return RowViewData(
                 id: round.id,
@@ -35,21 +37,22 @@ final class HistoryViewModel {
                 resultColor: isCorrect ? .green : .red,
                 borderColor: isCorrect ? Color.green.opacity(0.6) : Color.red.opacity(0.5),
                 pills: [
-                    makePill(title: "Lower", value: round.lowerChance, playerChoice: round.playerChoice, correctAnswer: round.correctAnswer),
-                    makePill(title: "Equal", value: round.equalChance, playerChoice: round.playerChoice, correctAnswer: round.correctAnswer),
-                    makePill(title: "Higher", value: round.higherChance, playerChoice: round.playerChoice, correctAnswer: round.correctAnswer)
+                    makePill(option: .lower, value: round.lowerChance, playerChoice: playerChoice, correctAnswer: correctAnswer),
+                    makePill(option: .equal, value: round.equalChance, playerChoice: playerChoice, correctAnswer: correctAnswer),
+                    makePill(option: .higher, value: round.higherChance, playerChoice: playerChoice, correctAnswer: correctAnswer)
                 ]
             )
         }
     }
 
-    private func makePill(title: String, value: Double, playerChoice: String, correctAnswer: String) -> ChancePillViewData {
-        let isEmphasized = playerChoice == title
-        let isCorrectAnswer = correctAnswer == title
+    private func makePill(option: GuessOption, value: Double, playerChoice: GuessOption?, correctAnswer: GuessOption?) -> ChancePillViewData {
+        let isEmphasized = playerChoice == option
+        let isCorrectAnswer = correctAnswer == option
         let percent = Int((value * 100).rounded())
+        let title = option.displayText
 
         return ChancePillViewData(
-            id: title,
+            id: option.rawValue,
             title: title,
             text: "\(title): \(percent)%",
             isEmphasized: isEmphasized,
