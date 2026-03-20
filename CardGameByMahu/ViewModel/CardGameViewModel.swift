@@ -30,6 +30,19 @@ final class CardGameViewModel {
     
     private let deckSettings: DeckSettings
 
+    // Stores normal-mode in-progress state while hardcore temporarily owns the deck.
+    private var normalModeSnapshot: NormalModeSnapshot?
+
+    private struct NormalModeSnapshot {
+        let cardValues: [Int]
+        let playerScore: Int
+        let computerScore: Int
+        let remainingCards: Int
+        let playerCard: String
+        let computerCard: String
+        let waitingForGuess: Bool
+    }
+
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
     }
@@ -277,6 +290,21 @@ final class CardGameViewModel {
     func startHardcoreMode() {
         guard let context = modelContext else { return }
 
+        // Save normal-mode progress once before hardcore replaces deck state.
+        if normalModeSnapshot == nil {
+            let descriptor = FetchDescriptor<PlayingCard>()
+            let normalCards = (try? context.fetch(descriptor)) ?? []
+            normalModeSnapshot = NormalModeSnapshot(
+                cardValues: normalCards.map(\ .value),
+                playerScore: playerScore,
+                computerScore: computerScore,
+                remainingCards: remainingCards,
+                playerCard: playerCard,
+                computerCard: computerCard,
+                waitingForGuess: waitingForGuess
+            )
+        }
+
         stopHardcoreTimer()
 
         isHardcoreMode = true
@@ -318,9 +346,36 @@ final class CardGameViewModel {
         hardcoreElapsedTime = 0
         hardcoreOptimalGuessCount = 0
         hardcoreGuessCount = 0
-        waitingForGuess = false
-        computerCard = "back"
-        playerCard = "back"
+
+        restoreNormalModeSnapshotIfNeeded()
+    }
+
+    private func restoreNormalModeSnapshotIfNeeded() {
+        guard let context = modelContext, let snapshot = normalModeSnapshot else {
+            waitingForGuess = false
+            computerCard = "back"
+            playerCard = "back"
+            return
+        }
+
+        try? context.delete(model: PlayingCard.self)
+        for value in snapshot.cardValues {
+            context.insert(PlayingCard(value: value))
+        }
+
+        playerScore = snapshot.playerScore
+        computerScore = snapshot.computerScore
+        scoreRecord?.playerScore = snapshot.playerScore
+        scoreRecord?.computerScore = snapshot.computerScore
+
+        playerCard = snapshot.playerCard
+        computerCard = snapshot.computerCard
+        waitingForGuess = snapshot.waitingForGuess
+        remainingCards = snapshot.remainingCards
+
+        try? context.save()
+        updateCardCount()
+        normalModeSnapshot = nil
     }
 
     func finishHardcoreMode() {
