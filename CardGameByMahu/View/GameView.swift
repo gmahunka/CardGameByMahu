@@ -16,9 +16,26 @@ struct GameView: View {
     
     var body: some View {
         
-        ZStack {
+        ZStack(alignment: .topLeading) {
             Color(nsColor: .gray)
                 .ignoresSafeArea()
+
+            if !viewModel.isHardcoreMode {
+                Button {
+                    viewModel.isHardcoreMode = true
+                } label: {
+                    Label("Hardcore Mode", systemImage: "flame.fill")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.red.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .padding(.top, 20)
+                .padding(.leading, 20)
+                .zIndex(2)
+            }
             
             // Subtle global tint for UI readability
             LinearGradient(
