@@ -43,10 +43,16 @@ final class CardGameViewModel {
     var isComputerFlipped: Bool = false
     var showReshuffleAlert: Bool = false
     var waitingForGuess: Bool = false
+    var isHardcoreMode: Bool = false
+    var hardcoreElapsedTime: Double = 0
+    var hardcoreOptimalGuessCount: Int = 0
+    var hardcoreGuessCount: Int = 0
 
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
+    private var hardcoreTimer: Timer?
+    private var hardcoreStartDate: Date?
     
     var modelContext: ModelContext?
     
@@ -167,6 +173,7 @@ final class CardGameViewModel {
         guard waitingForGuess else { return }
 
         let chances = calculateChances(for: computerValue)
+        let likelyScenario = mostLikelyScenario(from: chances)
 
         // Draw player's card
         guard let newCardValue = drawCard() else {
@@ -204,8 +211,19 @@ final class CardGameViewModel {
             scoreRecord?.computerScore = computerScore
         }
 
+        if isHardcoreMode {
+            hardcoreGuessCount += 1
+            if likelyScenario == playerChoiceOption {
+                hardcoreOptimalGuessCount += 1
+            }
+        }
+
         try? modelContext?.save()
         waitingForGuess = false
+
+        if isHardcoreMode && remainingCards < 2 {
+            finishHardcoreMode()
+        }
     }
 
     private func correctAnswerOption(computer: Int, player: Int) -> GuessOption {
@@ -230,5 +248,103 @@ final class CardGameViewModel {
         let lower = Double(cards.filter { $0.value < computer }.count) / total
 
         return (higher: higher, equal: equal, lower: lower)
+    }
+
+    private func mostLikelyScenario(from chances: (higher: Double, equal: Double, lower: Double)) -> GuessOption {
+        let ranked: [(GuessOption, Double)] = [
+            (.higher, chances.higher),
+            (.equal, chances.equal),
+            (.lower, chances.lower)
+        ]
+
+        // Stable tie break keeps leaderboard outcomes deterministic.
+        return ranked.max { lhs, rhs in
+            if lhs.1 == rhs.1 {
+                return tieBreakOrder(lhs.0) > tieBreakOrder(rhs.0)
+            }
+            return lhs.1 < rhs.1
+        }?.0 ?? .equal
+    }
+
+    private func tieBreakOrder(_ option: GuessOption) -> Int {
+        switch option {
+        case .higher: return 3
+        case .equal: return 2
+        case .lower: return 1
+        }
+    }
+
+    func startHardcoreMode() {
+        guard let context = modelContext else { return }
+
+        stopHardcoreTimer()
+
+        isHardcoreMode = true
+        hardcoreElapsedTime = 0
+        hardcoreOptimalGuessCount = 0
+        hardcoreGuessCount = 0
+
+        // Hardcore deck is always exactly 52 cards: 4x each value from 2...14.
+        try? context.delete(model: PlayingCard.self)
+        for value in DeckSettings.minCardValue...DeckSettings.maxCardValue {
+            for _ in 0..<4 {
+                context.insert(PlayingCard(value: value))
+            }
+        }
+
+        playerScore = 0
+        computerScore = 0
+        scoreRecord?.playerScore = 0
+        scoreRecord?.computerScore = 0
+
+        computerCard = "back"
+        playerCard = "back"
+        waitingForGuess = false
+
+        try? context.save()
+        updateCardCount()
+
+        hardcoreStartDate = Date()
+        hardcoreTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self, let start = self.hardcoreStartDate else { return }
+            self.hardcoreElapsedTime = Date().timeIntervalSince(start)
+        }
+        RunLoop.main.add(hardcoreTimer!, forMode: .common)
+    }
+
+    func quitHardcoreMode() {
+        stopHardcoreTimer()
+        isHardcoreMode = false
+        hardcoreElapsedTime = 0
+        hardcoreOptimalGuessCount = 0
+        hardcoreGuessCount = 0
+        waitingForGuess = false
+        computerCard = "back"
+        playerCard = "back"
+    }
+
+    func finishHardcoreMode() {
+        guard let context = modelContext, isHardcoreMode else { return }
+
+        let accuracy = hardcoreGuessCount > 0
+            ? Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)
+            : 0
+
+        let result = HardcoreResult(timeTaken: hardcoreElapsedTime, accuracy: accuracy)
+        context.insert(result)
+        try? context.save()
+
+        quitHardcoreMode()
+    }
+
+    var hardcoreAccuracyPercent: Double {
+        guard hardcoreGuessCount > 0 else { return 0 }
+        return (Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)) * 100
+    }
+
+    private func stopHardcoreTimer() {
+        hardcoreTimer?.invalidate()
+        hardcoreTimer = nil
+        hardcoreStartDate = nil
     }
 }
