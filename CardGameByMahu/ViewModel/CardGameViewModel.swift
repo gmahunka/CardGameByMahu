@@ -14,7 +14,7 @@ enum Guess {
     case higher
     case equal
     case lower
-
+    
     var option: GuessOption {
         switch self {
         case .higher: return .higher
@@ -29,10 +29,10 @@ enum Guess {
 final class CardGameViewModel {
     
     private let deckSettings: DeckSettings
-
+    
     // Stores normal-mode in-progress state while hardcore temporarily owns the deck.
     private var normalModeSnapshot: NormalModeSnapshot?
-
+    
     private struct NormalModeSnapshot {
         let cardValues: [Int]
         let playerScore: Int
@@ -42,11 +42,11 @@ final class CardGameViewModel {
         let computerCard: String
         let waitingForGuess: Bool
     }
-
+    
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
     }
-
+    
     var playerScore: Int = 0
     var computerScore: Int = 0
     var remainingCards: Int = 0
@@ -60,7 +60,7 @@ final class CardGameViewModel {
     var hardcoreElapsedTime: Double = 0
     var hardcoreOptimalGuessCount: Int = 0
     var hardcoreGuessCount: Int = 0
-
+    
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
@@ -141,7 +141,7 @@ final class CardGameViewModel {
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
-
+        
         // Reshuffle starts a new game session, so clear persisted round history.
         try? context.delete(model: RoundHistoryItem.self)
         try? context.save()
@@ -184,19 +184,19 @@ final class CardGameViewModel {
     
     func makeGuess(_ guess: Guess) {
         guard waitingForGuess else { return }
-
+        
         let chances = calculateChances(for: computerValue)
         let optimalChoices = optimalScenarios(from: chances)
-
+        
         guard let newCardValue = drawCard() else { return }
-
+        
         playerValue = newCardValue
         playerCard = "card\(playerValue)"
-
+        
         let playerChoiceOption = guess.option
         let correctAnswerOption = correctAnswerOption(computer: computerValue, player: playerValue)
         let guessCorrect = playerChoiceOption == correctAnswerOption
-
+        
         let round = RoundHistoryItem(
             computerCard: "card\(computerValue)",
             playerCard: "card\(playerValue)",
@@ -205,10 +205,11 @@ final class CardGameViewModel {
             wasCorrect: guessCorrect,
             higherChance: chances.higher,
             equalChance: chances.equal,
-            lowerChance: chances.lower
+            lowerChance: chances.lower,
+            isHardcoreMode: isHardcoreMode
         )
         modelContext?.insert(round)
-
+        
         if guessCorrect {
             playerScore += 1
             scoreRecord?.playerScore = playerScore
@@ -216,64 +217,64 @@ final class CardGameViewModel {
             computerScore += 1
             scoreRecord?.computerScore = computerScore
         }
-
+        
         if isHardcoreMode {
             hardcoreGuessCount += 1
-            if optimalChoices.contains(playerChoiceOption)            {
-     hardcoreOptimalGuessCount += 1
+            if optimalChoices.contains(playerChoiceOption) {
+                hardcoreOptimalGuessCount += 1
             }
         }
-
+        
         try? modelContext?.save()
         waitingForGuess = false
-
+        
         if isHardcoreMode && remainingCards < 2 {
             finishHardcoreMode()
         }
     }
-
+    
     private func optimalScenarios(from chances: (higher: Double, equal: Double, lower: Double)) -> Set<GuessOption> {
         let ranked: [(GuessOption, Double)] = [
             (.higher, chances.higher),
             (.equal, chances.equal),
             (.lower, chances.lower)
         ]
-
+        
         guard let maxValue = ranked.map(\.1).max() else { return [] }
         return Set(ranked.filter { $0.1 == maxValue }.map(\.0))
     }
-
+    
     private func correctAnswerOption(computer: Int, player: Int) -> GuessOption {
         if player > computer { return .higher }
         if player < computer { return .lower }
         return .equal
     }
-
+    
     private func calculateChances(for computer: Int) -> (higher: Double, equal: Double, lower: Double) {
         guard let context = modelContext else {
             return (higher: 0, equal: 0, lower: 0)
         }
-
+        
         let descriptor = FetchDescriptor<PlayingCard>()
         guard let cards = try? context.fetch(descriptor), !cards.isEmpty else {
             return (higher: 0, equal: 0, lower: 0)
         }
-
+        
         let total = Double(cards.count)
         let higher = Double(cards.filter { $0.value > computer }.count) / total
         let equal = Double(cards.filter { $0.value == computer }.count) / total
         let lower = Double(cards.filter { $0.value < computer }.count) / total
-
+        
         return (higher: higher, equal: equal, lower: lower)
     }
-
+    
     private func mostLikelyScenario(from chances: (higher: Double, equal: Double, lower: Double)) -> GuessOption {
         let ranked: [(GuessOption, Double)] = [
             (.higher, chances.higher),
             (.equal, chances.equal),
             (.lower, chances.lower)
         ]
-
+        
         // Stable tie break keeps leaderboard outcomes deterministic.
         return ranked.max { lhs, rhs in
             if lhs.1 == rhs.1 {
@@ -282,7 +283,7 @@ final class CardGameViewModel {
             return lhs.1 < rhs.1
         }?.0 ?? .equal
     }
-
+    
     private func tieBreakOrder(_ option: GuessOption) -> Int {
         switch option {
         case .higher: return 3
@@ -290,10 +291,10 @@ final class CardGameViewModel {
         case .lower: return 1
         }
     }
-
+    
     func startHardcoreMode() {
         guard let context = modelContext else { return }
-
+        
         // Save normal-mode progress once before hardcore replaces deck state.
         if normalModeSnapshot == nil {
             let descriptor = FetchDescriptor<PlayingCard>()
@@ -308,14 +309,14 @@ final class CardGameViewModel {
                 waitingForGuess: waitingForGuess
             )
         }
-
+        
         stopHardcoreTimer()
-
+        
         isHardcoreMode = true
         hardcoreElapsedTime = 0
         hardcoreOptimalGuessCount = 0
         hardcoreGuessCount = 0
-
+        
         // Hardcore deck is always exactly 52 cards: 4x each value from 2...14.
         try? context.delete(model: PlayingCard.self)
         for value in DeckSettings.minCardValue...DeckSettings.maxCardValue {
@@ -323,19 +324,19 @@ final class CardGameViewModel {
                 context.insert(PlayingCard(value: value))
             }
         }
-
+        
         playerScore = 0
         computerScore = 0
         scoreRecord?.playerScore = 0
         scoreRecord?.computerScore = 0
-
+        
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
-
+        
         try? context.save()
         updateCardCount()
-
+        
         hardcoreStartDate = Date()
         hardcoreTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -347,17 +348,23 @@ final class CardGameViewModel {
             RunLoop.main.add(hardcoreTimer, forMode: .common)
         }
     }
-
+    
+    private func stopHardcoreTimer() {
+        hardcoreTimer?.invalidate()
+        hardcoreTimer = nil
+        hardcoreStartDate = nil
+    }
+    
     func quitHardcoreMode() {
         stopHardcoreTimer()
         isHardcoreMode = false
         hardcoreElapsedTime = 0
         hardcoreOptimalGuessCount = 0
         hardcoreGuessCount = 0
-
+        
         restoreNormalModeSnapshotIfNeeded()
     }
-
+    
     private func restoreNormalModeSnapshotIfNeeded() {
         guard let context = modelContext, let snapshot = normalModeSnapshot else {
             waitingForGuess = false
@@ -365,34 +372,34 @@ final class CardGameViewModel {
             playerCard = "back"
             return
         }
-
+        
         try? context.delete(model: PlayingCard.self)
         for value in snapshot.cardValues {
             context.insert(PlayingCard(value: value))
         }
-
+        
         playerScore = snapshot.playerScore
         computerScore = snapshot.computerScore
         scoreRecord?.playerScore = snapshot.playerScore
         scoreRecord?.computerScore = snapshot.computerScore
-
+        
         playerCard = snapshot.playerCard
         computerCard = snapshot.computerCard
         waitingForGuess = snapshot.waitingForGuess
         remainingCards = snapshot.remainingCards
-
+        
         try? context.save()
         updateCardCount()
         normalModeSnapshot = nil
     }
-
+    
     func finishHardcoreMode() {
         guard let context = modelContext, isHardcoreMode else { return }
-
+        
         let accuracy = hardcoreGuessCount > 0
-            ? Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)
-            : 0
-
+        ? Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)
+        : 0
+        
         let result = HardcoreResult(
             timeTaken: hardcoreElapsedTime,
             accuracy: accuracy,
@@ -400,18 +407,13 @@ final class CardGameViewModel {
         )
         context.insert(result)
         try? context.save()
-
+        
         quitHardcoreMode()
     }
-
+    
     var hardcoreAccuracyPercent: Double {
         guard hardcoreGuessCount > 0 else { return 0 }
         return (Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)) * 100
     }
-
-    private func stopHardcoreTimer() {
-        hardcoreTimer?.invalidate()
-        hardcoreTimer = nil
-        hardcoreStartDate = nil
-    }
+    
 }

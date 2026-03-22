@@ -17,6 +17,7 @@ struct HistoryView: View {
             HStack {
                 Image(systemName: "clock.fill")
                     .font(.largeTitle)
+                    .foregroundColor(.primary)
                 Text("Match History")
                     .font(.title)
                     .bold()
@@ -43,8 +44,8 @@ struct HistoryView: View {
                             Spacer()
                             VStack(spacing: 6) {
                                 Text("Player")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(row.isHardcoreMode ? .caption.weight(.bold) : .caption)
+                                    .foregroundColor(row.isHardcoreMode ? .red : .secondary)
                                 Image(row.playerCard)
                                     .resizable()
                                     .scaledToFit()
@@ -53,8 +54,8 @@ struct HistoryView: View {
                             }
                             VStack(spacing: 6) {
                                 Text("Computer")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(row.isHardcoreMode ? .caption.weight(.bold) : .caption)
+                                    .foregroundColor(row.isHardcoreMode ? .red : .secondary)
                                 Image(row.computerCard)
                                     .resizable()
                                     .scaledToFit()
@@ -68,8 +69,8 @@ struct HistoryView: View {
                         HStack(spacing: 16) {
                             Spacer()
                             Label(row.resultTitle, systemImage: row.resultSystemImage)
-                                .font(.subheadline.weight(.bold))
-                                .foregroundColor(row.resultColor)
+                                .font(row.isHardcoreMode ? .subheadline.weight(.heavy) : .subheadline.weight(.bold))
+                                .foregroundColor(row.isHardcoreMode && !row.resultTitle.contains("Correct") ? .red : row.resultColor)
                             Spacer()
                         }
 
@@ -79,7 +80,7 @@ struct HistoryView: View {
                                 Spacer()
                                 ForEach(row.pills) { pill in
                                     Text(pill.text)
-                                        .font(.caption.weight(pill.isEmphasized ? .bold : .regular))
+                                        .font(.caption.weight(row.isHardcoreMode && pill.isEmphasized ? .heavy : (pill.isEmphasized ? .bold : .regular)))
                                         .foregroundColor(pill.foregroundColor)
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 5)
@@ -96,15 +97,26 @@ struct HistoryView: View {
                     .frame(maxWidth: .infinity)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+                            .fill(
+                                row.isHardcoreMode
+                                    ? Color.red.opacity(0.12)
+                                    : Color(nsColor: .windowBackgroundColor).opacity(0.8)
+                            )
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(row.borderColor, lineWidth: 1.5)
+                            .stroke(
+                                row.isHardcoreMode
+                                    ? Color.red.opacity(0.8)
+                                    : row.borderColor,
+                                lineWidth: row.isHardcoreMode ? 2 : 1.5
+                            )
                     )
                     .padding(.vertical, 6)
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.red.opacity(0.06))
             }
         }
         .padding(.horizontal)
