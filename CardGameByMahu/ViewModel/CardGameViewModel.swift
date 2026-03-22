@@ -334,10 +334,16 @@ final class CardGameViewModel {
 
         hardcoreStartDate = Date()
         hardcoreTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self, let start = self.hardcoreStartDate else { return }
-            self.hardcoreElapsedTime = Date().timeIntervalSince(start)
+            guard let weakSelf = self else { return }
+            Task { @MainActor [weakSelf] in
+                guard let start = weakSelf.hardcoreStartDate else { return }
+                weakSelf.hardcoreElapsedTime = Date().timeIntervalSince(start)
+            }
         }
-        RunLoop.main.add(hardcoreTimer!, forMode: .common)
+
+        if let hardcoreTimer {
+            RunLoop.main.add(hardcoreTimer, forMode: .common)
+        }
     }
 
     func quitHardcoreMode() {
