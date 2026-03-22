@@ -186,21 +186,15 @@ final class CardGameViewModel {
         guard waitingForGuess else { return }
 
         let chances = calculateChances(for: computerValue)
-        let likelyScenario = mostLikelyScenario(from: chances)
+        let optimalChoices = optimalScenarios(from: chances)
 
-        // Draw player's card
-        guard let newCardValue = drawCard() else {
-            // Handle empty deck mid-round if necessary
-            return
-        }
+        guard let newCardValue = drawCard() else { return }
 
         playerValue = newCardValue
         playerCard = "card\(playerValue)"
 
         let playerChoiceOption = guess.option
         let correctAnswerOption = correctAnswerOption(computer: computerValue, player: playerValue)
-
-        // Determine if guess was correct using stable values
         let guessCorrect = playerChoiceOption == correctAnswerOption
 
         let round = RoundHistoryItem(
@@ -215,7 +209,6 @@ final class CardGameViewModel {
         )
         modelContext?.insert(round)
 
-        // Award point
         if guessCorrect {
             playerScore += 1
             scoreRecord?.playerScore = playerScore
@@ -226,8 +219,8 @@ final class CardGameViewModel {
 
         if isHardcoreMode {
             hardcoreGuessCount += 1
-            if likelyScenario == playerChoiceOption {
-                hardcoreOptimalGuessCount += 1
+            if optimalChoices.contains(playerChoiceOption)            {
+     hardcoreOptimalGuessCount += 1
             }
         }
 
@@ -237,6 +230,17 @@ final class CardGameViewModel {
         if isHardcoreMode && remainingCards < 2 {
             finishHardcoreMode()
         }
+    }
+
+    private func optimalScenarios(from chances: (higher: Double, equal: Double, lower: Double)) -> Set<GuessOption> {
+        let ranked: [(GuessOption, Double)] = [
+            (.higher, chances.higher),
+            (.equal, chances.equal),
+            (.lower, chances.lower)
+        ]
+
+        guard let maxValue = ranked.map(\.1).max() else { return [] }
+        return Set(ranked.filter { $0.1 == maxValue }.map(\.0))
     }
 
     private func correctAnswerOption(computer: Int, player: Int) -> GuessOption {
