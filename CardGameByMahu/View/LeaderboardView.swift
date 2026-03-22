@@ -10,6 +10,7 @@ import SwiftData
 
 struct LeaderboardView: View {
     @Query(sort: [
+        SortDescriptor(\HardcoreResult.scoreReached, order: .reverse),
         SortDescriptor(\HardcoreResult.accuracy, order: .reverse),
         SortDescriptor(\HardcoreResult.timeTaken, order: .forward)
     ]) private var results: [HardcoreResult]
@@ -46,8 +47,10 @@ struct LeaderboardView: View {
                             .frame(width: 36, alignment: .leading)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
+                            Text("Score: \(result.scoreReached)")
                                 .font(.headline)
+                            Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
+                                .font(.subheadline)
                             Text(String(format: "Time: %.1fs", result.timeTaken))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
