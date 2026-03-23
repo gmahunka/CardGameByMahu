@@ -29,6 +29,7 @@ enum Guess {
 final class CardGameViewModel {
     
     private let deckSettings: DeckSettings
+    private let hardcoreEngine: HardcoreGameEngine
     
     // Stores normal-mode in-progress state while hardcore temporarily owns the deck.
     private var normalModeSnapshot: NormalModeSnapshot?
@@ -45,6 +46,7 @@ final class CardGameViewModel {
     
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
+        self.hardcoreEngine = HardcoreGameEngine(deckSettings: deckSettings)
     }
     
     var playerScore: Int = 0
@@ -56,21 +58,39 @@ final class CardGameViewModel {
     var isComputerFlipped: Bool = false
     var showReshuffleAlert: Bool = false
     var waitingForGuess: Bool = false
-    var isHardcoreMode: Bool = false
-    var hardcoreElapsedTime: Double = 0
-    var hardcoreOptimalGuessCount: Int = 0
-    var hardcoreGuessCount: Int = 0
+    
+    // Forwarded from hardcore engine for backward compatibility
+    var isHardcoreMode: Bool {
+        get { hardcoreEngine.isHardcoreMode }
+        set {
+            if newValue && !hardcoreEngine.isHardcoreMode {
+                // Starting hardcore mode
+                startHardcoreMode()
+            } else if !newValue && hardcoreEngine.isHardcoreMode {
+                // Allows dismissal of the sheet
+                quitHardcoreMode()
+            }
+        }
+    }
+    var hardcoreElapsedTime: Double {
+        get { hardcoreEngine.elapsedTime }
+    }
+    var hardcoreOptimalGuessCount: Int {
+        get { hardcoreEngine.optimalGuessCount }
+    }
+    var hardcoreGuessCount: Int {
+        get { hardcoreEngine.guessCount }
+    }
     
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
-    private var hardcoreTimer: Timer?
-    private var hardcoreStartDate: Date?
     
     var modelContext: ModelContext?
     
     func setupGame(context: ModelContext) {
         self.modelContext = context
+        hardcoreEngine.setModelContext(context)
         loadScores()
         
         // Move the "is the deck empty?" check here
@@ -219,10 +239,7 @@ final class CardGameViewModel {
         }
         
         if isHardcoreMode {
-            hardcoreGuessCount += 1
-            if optimalChoices.contains(playerChoiceOption) {
-                hardcoreOptimalGuessCount += 1
-            }
+            hardcoreEngine.recordGuess(isOptimal: optimalChoices.contains(playerChoiceOption))
         }
         
         try? modelContext?.save()
@@ -310,58 +327,20 @@ final class CardGameViewModel {
             )
         }
         
-        stopHardcoreTimer()
+        // Start hardcore engine
+        hardcoreEngine.start(with: context, playerScoreRecord: scoreRecord)
         
-        isHardcoreMode = true
-        hardcoreElapsedTime = 0
-        hardcoreOptimalGuessCount = 0
-        hardcoreGuessCount = 0
-        
-        // Hardcore deck is always exactly 52 cards: 4x each value from 2...14.
-        try? context.delete(model: PlayingCard.self)
-        for value in DeckSettings.minCardValue...DeckSettings.maxCardValue {
-            for _ in 0..<4 {
-                context.insert(PlayingCard(value: value))
-            }
-        }
-        
-        playerScore = 0
-        computerScore = 0
-        scoreRecord?.playerScore = 0
-        scoreRecord?.computerScore = 0
-        
+        // Reset UI state
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
         
         try? context.save()
         updateCardCount()
-        
-        hardcoreStartDate = Date()
-        hardcoreTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self, let start = self.hardcoreStartDate else { return }
-                self.hardcoreElapsedTime = Date().timeIntervalSince(start)
-            }
-        }
-        if let hardcoreTimer {
-            RunLoop.main.add(hardcoreTimer, forMode: .common)
-        }
-    }
-    
-    private func stopHardcoreTimer() {
-        hardcoreTimer?.invalidate()
-        hardcoreTimer = nil
-        hardcoreStartDate = nil
     }
     
     func quitHardcoreMode() {
-        stopHardcoreTimer()
-        isHardcoreMode = false
-        hardcoreElapsedTime = 0
-        hardcoreOptimalGuessCount = 0
-        hardcoreGuessCount = 0
-        
+        hardcoreEngine.quit()
         restoreNormalModeSnapshotIfNeeded()
     }
     
@@ -394,26 +373,12 @@ final class CardGameViewModel {
     }
     
     func finishHardcoreMode() {
-        guard let context = modelContext, isHardcoreMode else { return }
-        
-        let accuracy = hardcoreGuessCount > 0
-        ? Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)
-        : 0
-        
-        let result = HardcoreResult(
-            timeTaken: hardcoreElapsedTime,
-            accuracy: accuracy,
-            scoreReached: playerScore
-        )
-        context.insert(result)
-        try? context.save()
-        
+        _ = hardcoreEngine.finish(playerScore: playerScore)
         quitHardcoreMode()
     }
     
     var hardcoreAccuracyPercent: Double {
-        guard hardcoreGuessCount > 0 else { return 0 }
-        return (Double(hardcoreOptimalGuessCount) / Double(hardcoreGuessCount)) * 100
+        hardcoreEngine.accuracyPercent
     }
     
 }
