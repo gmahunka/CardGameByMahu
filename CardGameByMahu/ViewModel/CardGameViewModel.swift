@@ -284,30 +284,6 @@ final class CardGameViewModel {
         return (higher: higher, equal: equal, lower: lower)
     }
     
-    private func mostLikelyScenario(from chances: (higher: Double, equal: Double, lower: Double)) -> GuessOption {
-        let ranked: [(GuessOption, Double)] = [
-            (.higher, chances.higher),
-            (.equal, chances.equal),
-            (.lower, chances.lower)
-        ]
-        
-        // Stable tie break keeps leaderboard outcomes deterministic.
-        return ranked.max { lhs, rhs in
-            if lhs.1 == rhs.1 {
-                return tieBreakOrder(lhs.0) > tieBreakOrder(rhs.0)
-            }
-            return lhs.1 < rhs.1
-        }?.0 ?? .equal
-    }
-    
-    private func tieBreakOrder(_ option: GuessOption) -> Int {
-        switch option {
-        case .higher: return 3
-        case .equal: return 2
-        case .lower: return 1
-        }
-    }
-    
     func startHardcoreMode() {
         guard let context = modelContext else { return }
 
