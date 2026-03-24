@@ -20,7 +20,7 @@ struct GameView: View {
         ZStack(alignment: .topLeading) {
             Color(nsColor: .gray)
                 .ignoresSafeArea()
-
+            
             if !viewModel.isHardcoreMode {
                 Button {
                     viewModel.isHardcoreMode = true
@@ -76,7 +76,7 @@ struct GameView: View {
                         Text("Cards: \(viewModel.remainingCards)")
                             .font(.subheadline)
                             .foregroundColor(.white)
-                                                if !viewModel.isHardcoreMode {
+                        if !viewModel.isHardcoreMode {
                             Spacer()
                             Button {
                                 viewModel.resetDeck()
