@@ -204,19 +204,19 @@ final class CardGameViewModel {
     
     func makeGuess(_ guess: Guess) {
         guard waitingForGuess else { return }
-        
+
         let chances = calculateChances(for: computerValue)
         let optimalChoices = optimalScenarios(from: chances)
-        
+
         guard let newCardValue = drawCard() else { return }
-        
+
         playerValue = newCardValue
         playerCard = "card\(playerValue)"
-        
+
         let playerChoiceOption = guess.option
         let correctAnswerOption = correctAnswerOption(computer: computerValue, player: playerValue)
         let guessCorrect = playerChoiceOption == correctAnswerOption
-        
+
         let round = RoundHistoryItem(
             computerCard: "card\(computerValue)",
             playerCard: "card\(playerValue)",
@@ -229,7 +229,7 @@ final class CardGameViewModel {
             isHardcoreMode: isHardcoreMode
         )
         modelContext?.insert(round)
-        
+
         if guessCorrect {
             playerScore += 1
             scoreRecord?.playerScore = playerScore
@@ -237,17 +237,16 @@ final class CardGameViewModel {
             computerScore += 1
             scoreRecord?.computerScore = computerScore
         }
-        
+
         if isHardcoreMode {
             hardcoreEngine.recordGuess(isOptimal: optimalChoices.contains(playerChoiceOption))
+            if remainingCards < 2 {
+                hardcoreEngine.stopTimerWhenRunExhausted()
+            }
         }
-        
+
         try? modelContext?.save()
         waitingForGuess = false
-        
-        if isHardcoreMode && remainingCards < 2 {
-            finishHardcoreMode()
-        }
     }
     
     private func optimalScenarios(from chances: (higher: Double, equal: Double, lower: Double)) -> Set<GuessOption> {
@@ -311,7 +310,7 @@ final class CardGameViewModel {
     
     func startHardcoreMode() {
         guard let context = modelContext else { return }
-        
+
         // Save normal-mode progress once before hardcore replaces deck state.
         if normalModeSnapshot == nil {
             let descriptor = FetchDescriptor<PlayingCard>()
@@ -326,7 +325,7 @@ final class CardGameViewModel {
                 waitingForGuess: waitingForGuess
             )
         }
-        
+
         // Start hardcore engine
         hardcoreEngine.start(with: context, playerScoreRecord: scoreRecord)
         
@@ -334,11 +333,11 @@ final class CardGameViewModel {
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
-        
+
         try? context.save()
         updateCardCount()
     }
-    
+
     func quitHardcoreMode() {
         hardcoreEngine.quit()
         restoreNormalModeSnapshotIfNeeded()

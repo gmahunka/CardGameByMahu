@@ -106,6 +106,11 @@ final class HardcoreGameEngine {
         guessCount = 0
     }
     
+    func stopTimerWhenRunExhausted() {
+        guard isHardcoreMode else { return }
+        stopTimer()
+    }
+    
     var accuracyPercent: Double {
         guard guessCount > 0 else { return 0 }
         return (Double(optimalGuessCount) / Double(guessCount)) * 100

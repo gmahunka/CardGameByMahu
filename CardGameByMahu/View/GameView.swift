@@ -13,6 +13,7 @@ struct GameView: View {
     @Environment(\.modelContext) private var context
     @Bindable var viewModel: CardGameViewModel
     @State private var showingRules = false
+    @State private var showHardcoreOutOfCardsAlert = false
     
     var body: some View {
         
@@ -182,7 +183,8 @@ struct GameView: View {
                         Button {
                             if viewModel.remainingCards < 2 {
                                 if viewModel.isHardcoreMode {
-                                    viewModel.finishHardcoreMode()
+                                    // In hardcore, don't auto-finish; require explicit quit via alert.
+                                    showHardcoreOutOfCardsAlert = true
                                 } else {
                                     viewModel.showReshuffleAlert = true
                                 }
@@ -228,13 +230,21 @@ struct GameView: View {
             guard isHardcore else { return }
             viewModel.startHardcoreMode()
         }
-        .alert("Out of Cards!", isPresented: $viewModel.showReshuffleAlert) {
+        .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
                 viewModel.resetDeck()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
+        }
+        .alert("Hardcore Run Finished", isPresented: $showHardcoreOutOfCardsAlert) {
+            Button("Quit Hardcore", role: .destructive) {
+                viewModel.finishHardcoreMode()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("You have run out of cards in Hardcore mode. You must quit to continue.")
         }
         .overlay {
             if showingRules {
