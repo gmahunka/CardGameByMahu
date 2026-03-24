@@ -10,7 +10,6 @@ import SwiftData
 
 struct HardcoreGameView: View {
     @Bindable var viewModel: CardGameViewModel
-    @State private var showingRules = false
 
     var body: some View {
         ZStack {
