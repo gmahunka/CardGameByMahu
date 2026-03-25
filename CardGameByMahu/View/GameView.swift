@@ -226,10 +226,6 @@ struct GameView: View {
         .onAppear {
             viewModel.setupGame(context: context)
         }
-        .onChange(of: viewModel.isHardcoreMode) { _, isHardcore in
-            guard isHardcore else { return }
-            viewModel.startHardcoreMode()
-        }
         .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
                 viewModel.resetDeck()
