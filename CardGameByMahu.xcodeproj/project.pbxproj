@@ -6,11 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		DD4970E02F74954000763906 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD7632EC2F54A3D300CE50ED /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DD7632F32F54A3D300CE50ED;
+			remoteInfo = CardGameByMahu;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		DD4970DC2F74954000763906 /* CardGameByMahuUnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CardGameByMahuUnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD7632F42F54A3D300CE50ED /* CardGameByMahu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CardGameByMahu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		DD4970DD2F74954000763906 /* CardGameByMahuUnitTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CardGameByMahuUnitTests;
+			sourceTree = "<group>";
+		};
 		DD7632F62F54A3D300CE50ED /* CardGameByMahu */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = CardGameByMahu;
@@ -19,6 +35,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		DD4970D92F74954000763906 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DD7632F12F54A3D300CE50ED /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				DD7632F62F54A3D300CE50ED /* CardGameByMahu */,
+				DD4970DD2F74954000763906 /* CardGameByMahuUnitTests */,
 				DD7632F52F54A3D300CE50ED /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				DD7632F42F54A3D300CE50ED /* CardGameByMahu.app */,
+				DD4970DC2F74954000763906 /* CardGameByMahuUnitTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +73,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		DD4970DB2F74954000763906 /* CardGameByMahuUnitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD4970E42F74954000763906 /* Build configuration list for PBXNativeTarget "CardGameByMahuUnitTests" */;
+			buildPhases = (
+				DD4970D82F74954000763906 /* Sources */,
+				DD4970D92F74954000763906 /* Frameworks */,
+				DD4970DA2F74954000763906 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DD4970E12F74954000763906 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DD4970DD2F74954000763906 /* CardGameByMahuUnitTests */,
+			);
+			name = CardGameByMahuUnitTests;
+			packageProductDependencies = (
+			);
+			productName = CardGameByMahuUnitTests;
+			productReference = DD4970DC2F74954000763906 /* CardGameByMahuUnitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		DD7632F32F54A3D300CE50ED /* CardGameByMahu */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DD7632FF2F54A3D500CE50ED /* Build configuration list for PBXNativeTarget "CardGameByMahu" */;
@@ -77,9 +125,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					DD4970DB2F74954000763906 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = DD7632F32F54A3D300CE50ED;
+					};
 					DD7632F32F54A3D300CE50ED = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -100,11 +152,19 @@
 			projectRoot = "";
 			targets = (
 				DD7632F32F54A3D300CE50ED /* CardGameByMahu */,
+				DD4970DB2F74954000763906 /* CardGameByMahuUnitTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		DD4970DA2F74954000763906 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DD7632F22F54A3D300CE50ED /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +175,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DD4970D82F74954000763906 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DD7632F02F54A3D300CE50ED /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +191,53 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		DD4970E12F74954000763906 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DD7632F32F54A3D300CE50ED /* CardGameByMahu */;
+			targetProxy = DD4970E02F74954000763906 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		DD4970E22F74954000763906 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gmahunka.CardGameByMahuUnitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CardGameByMahu.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CardGameByMahu";
+			};
+			name = Debug;
+		};
+		DD4970E32F74954000763906 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gmahunka.CardGameByMahuUnitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CardGameByMahu.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CardGameByMahu";
+			};
+			name = Release;
+		};
 		DD7632FD2F54A3D500CE50ED /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -308,6 +421,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DD4970E42F74954000763906 /* Build configuration list for PBXNativeTarget "CardGameByMahuUnitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD4970E22F74954000763906 /* Debug */,
+				DD4970E32F74954000763906 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DD7632EF2F54A3D300CE50ED /* Build configuration list for PBXProject "CardGameByMahu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
