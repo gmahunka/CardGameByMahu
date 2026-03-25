@@ -58,15 +58,18 @@ final class HardcoreGameEngine {
         try? context.save()
         
         startDate = Date()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+        let start = startDate
+
+        let newTimer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self, let start else { return }
             Task { @MainActor [weak self] in
-                guard let self, let start = self.startDate else { return }
+                guard let self else { return }
                 self.elapsedTime = Date().timeIntervalSince(start)
             }
         }
-        if let timer {
-            RunLoop.main.add(timer, forMode: .common)
-        }
+
+        self.timer = newTimer
+        RunLoop.main.add(newTimer, forMode: .common)
     }
     
     func recordGuess(isOptimal: Bool) {
