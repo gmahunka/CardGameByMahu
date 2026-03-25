@@ -292,7 +292,7 @@ final class CardGameViewModel {
             let descriptor = FetchDescriptor<PlayingCard>()
             let normalCards = (try? context.fetch(descriptor)) ?? []
             normalModeSnapshot = NormalModeSnapshot(
-                cardValues: normalCards.map(\ .value),
+                cardValues: normalCards.map(\.value),
                 playerScore: playerScore,
                 computerScore: computerScore,
                 remainingCards: remainingCards,
