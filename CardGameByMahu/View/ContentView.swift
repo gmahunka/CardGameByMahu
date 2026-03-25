@@ -20,23 +20,32 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            
             SetupView(viewModel: setupViewModel, onApply: {
                 gameViewModel.resetDeck()
             })
-                .tabItem {
-                    Label("Setup", systemImage: "slider.horizontal.3")
-                }
-            
+            .tabItem {
+                Label("Setup", systemImage: "slider.horizontal.3")
+            }
+
             GameView(viewModel: gameViewModel)
                 .tabItem {
                     Label("Play", systemImage: "play.circle.fill")
                 }
-            
+
             HistoryView()
                 .tabItem {
                     Label("History", systemImage: "list.clipboard.fill")
                 }
+
+            LeaderboardView()
+                .tabItem {
+                    Label("Leaderboard", systemImage: "trophy.fill")
+                }
+        }
+        .tabViewStyle(.grouped)
+        .sheet(isPresented: $gameViewModel.isHardcoreMode) {
+            HardcoreGameView(viewModel: gameViewModel)
+                .interactiveDismissDisabled(true)
         }
         .tint(.orange)
     }

@@ -34,6 +34,7 @@ final class RoundHistoryItem {
     var equalChance: Double
     var lowerChance: Double
     var createdAt: Date
+    var isHardcoreMode: Bool
 
     var playerChoiceOption: GuessOption? {
         get { GuessOption(rawValue: playerChoiceRaw) }
@@ -55,6 +56,7 @@ final class RoundHistoryItem {
         higherChance: Double,
         equalChance: Double,
         lowerChance: Double,
+        isHardcoreMode: Bool = false,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -66,6 +68,7 @@ final class RoundHistoryItem {
         self.higherChance = higherChance
         self.equalChance = equalChance
         self.lowerChance = lowerChance
+        self.isHardcoreMode = isHardcoreMode
         self.createdAt = createdAt
     }
 }

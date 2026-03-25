@@ -10,6 +10,7 @@ final class HistoryViewModel {
         let resultSystemImage: String
         let resultColor: Color
         let borderColor: Color
+        let isHardcoreMode: Bool
         let pills: [ChancePillViewData]
     }
 
@@ -36,6 +37,7 @@ final class HistoryViewModel {
                 resultSystemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill",
                 resultColor: isCorrect ? .green : .red,
                 borderColor: isCorrect ? Color.green.opacity(0.6) : Color.red.opacity(0.5),
+                isHardcoreMode: round.isHardcoreMode,
                 pills: [
                     makePill(option: .lower, value: round.lowerChance, playerChoice: playerChoice, correctAnswer: correctAnswer),
                     makePill(option: .equal, value: round.equalChance, playerChoice: playerChoice, correctAnswer: correctAnswer),

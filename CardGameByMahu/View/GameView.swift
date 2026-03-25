@@ -13,212 +13,234 @@ struct GameView: View {
     @Environment(\.modelContext) private var context
     @Bindable var viewModel: CardGameViewModel
     @State private var showingRules = false
+    @State private var showHardcoreOutOfCardsAlert = false
     
     var body: some View {
         
-        ZStack {
-            // Background with better macOS appearance
-            Image("background-wood-grain")
-                .resizable()
-                .scaledToFill()
+        ZStack(alignment: .topLeading) {
+            Color(nsColor: .gray)
                 .ignoresSafeArea()
             
-            // Semi-transparent overlay for better UI contrast
-            Color.black.opacity(0.15)
-                .ignoresSafeArea()
-            VStack() {
-                
-                HStack {
-                    Spacer()
-                    // Info Button
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showingRules = true
-                        }
-                    } label: {
-                        Image(systemName: "info.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 20)
-                    .padding(.top, 40)
-                }
-                
-                // Logo
-                Image("emeles")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(minHeight: 80, idealHeight: 150, maxHeight: 200)
-                    .padding(.top, 20)
-                HStack {
-                    Text("Cards in Deck: \(viewModel.remainingCards)")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Button {
-                        // Manually trigger a deck reset
-                        viewModel.resetDeck()
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                            Text("Reshuffle")
-                        }
-                        .font(.subheadline).bold()
-                        .foregroundColor(.white)
+            if !viewModel.isHardcoreMode {
+                Button {
+                    viewModel.isHardcoreMode = true
+                } label: {
+                    Label("Hardcore Mode", systemImage: "flame.fill")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.orange.opacity(0.8))
-                        .cornerRadius(8)
-                    }
+                        .background(Color.red.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
-                .padding(.horizontal, 30)
-                Spacer()
-                
-                // Cards
-                HStack(spacing: 20) {
-                    Spacer()
-                    // Player Card
-                    ZStack {
-                        // Front (hidden face/back) — visible for 0...89°
-                        Image("back")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 150)
-                            .opacity(playerRotation < 90 ? 1 : 0)
-                            .rotation3DEffect(.degrees(playerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                        
-                        // Back (revealed face) — visible for 90...180°
-                        Image(viewModel.playerCard)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 150)
-                            .opacity(playerRotation >= 90 ? 1 : 0)
-                            .rotation3DEffect(.degrees(playerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                .padding(.top, 20)
+                .padding(.leading, 20)
+                .zIndex(2)
+            }
+            
+            // Subtle global tint for UI readability
+            LinearGradient(
+                colors: [Color.black.opacity(0.08),
+                         Color.black.opacity(0.18)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 12) {
+                    
+                    HStack {
+                        Spacer()
+                        // Info Button
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showingRules = true
+                            }
+                        } label: {
+                            Image(systemName: "info.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 12)
+                        .padding(.top, 12)
                     }
                     
-                    Spacer()
+                    // Logo
+                    Image("emeles")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxHeight: 100)
                     
-                    // Computer Card (two-sided flip)
-                    ZStack {
-                        // Front (hidden face/back) — visible for 0...89°
-                        Image("back")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 150)
-                            .opacity(computerRotation < 90 ? 1 : 0)
-                            .rotation3DEffect(.degrees(computerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                    HStack(spacing: 8) {
+                        Text("Cards: \(viewModel.remainingCards)")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                        if !viewModel.isHardcoreMode {
+                            Spacer()
+                            Button {
+                                viewModel.resetDeck()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                    Text("Reshuffle")
+                                }
+                                .font(.caption.bold())
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .background(Color.orange.opacity(0.8))
+                                .cornerRadius(6)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    
+                    // Cards
+                    HStack(spacing: 12) {
+                        Spacer()
+                        // Player Card
+                        ZStack {
+                            Image("back")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 120)
+                                .opacity(playerRotation < 90 ? 1 : 0)
+                                .rotation3DEffect(.degrees(playerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                            
+                            Image(viewModel.playerCard)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 120)
+                                .opacity(playerRotation >= 90 ? 1 : 0)
+                                .rotation3DEffect(.degrees(playerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                        }
                         
-                        // Back (revealed face) — visible for 90...180°
-                        Image(viewModel.computerCard)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 150)
-                            .opacity(computerRotation >= 90 ? 1 : 0)
-                            .rotation3DEffect(.degrees(computerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                        Spacer()
+                        
+                        // Computer Card
+                        ZStack {
+                            Image("back")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 120)
+                                .opacity(computerRotation < 90 ? 1 : 0)
+                                .rotation3DEffect(.degrees(computerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                            
+                            Image(viewModel.computerCard)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 120)
+                                .opacity(computerRotation >= 90 ? 1 : 0)
+                                .rotation3DEffect(.degrees(computerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 8)
+                    
+                    // Button section
+                    if viewModel.waitingForGuess {
+                        HStack(spacing: 8) {
+                            Button {
+                                handleGuess(.lower)
+                            } label: {
+                                Text("Lower")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 40)
+                                    .background(Color.blue)
+                                    .cornerRadius(8)
+                            }
+                            
+                            Button {
+                                handleGuess(.equal)
+                            } label: {
+                                Text("Equal")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 40)
+                                    .background(Color.green)
+                                    .cornerRadius(8)
+                            }
+                            
+                            Button {
+                                handleGuess(.higher)
+                            } label: {
+                                Text("Higher")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 40)
+                                    .background(Color.red)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    } else {
+                        Button {
+                            if viewModel.remainingCards < 2 {
+                                if viewModel.isHardcoreMode {
+                                    // In hardcore, don't auto-finish; require explicit quit via alert.
+                                    showHardcoreOutOfCardsAlert = true
+                                } else {
+                                    viewModel.showReshuffleAlert = true
+                                }
+                            } else {
+                                startNewRound()
+                            }
+                        } label: {
+                            Image("button")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 44)
+                        }
                     }
                     
-                    Spacer()
-                }
-                
-                Spacer()
-                
-                // Button section - Three guess buttons or start button
-                if viewModel.waitingForGuess {
-                    // Three guess buttons
-                    HStack(spacing: 20) {
-                        // Lower Button
-                        Button {
-                            handleGuess(.lower)
-                        } label: {
-                            Text("Lower")
-                                .font(.headline)
+                    HStack(spacing: 16) {
+                        VStack(spacing: 4) {
+                            Text("Player")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                            Text(String(viewModel.playerScore))
+                                .font(.title2.bold())
                                 .foregroundColor(.white)
-                                .frame(width: 100, height: 50)
-                                .background(Color.blue)
-                                .cornerRadius(10)
-                                .shadow(radius: 3)
                         }
-                        
-                        // Equal Button
-                        Button {
-                            handleGuess(.equal)
-                        } label: {
-                            Text("Equal")
-                                .font(.headline)
+                        Spacer()
+                        VStack(spacing: 4) {
+                            Text("Computer")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                            Text(String(viewModel.computerScore))
+                                .font(.title2.bold())
                                 .foregroundColor(.white)
-                                .frame(width: 100, height: 50)
-                                .background(Color.green)
-                                .cornerRadius(10)
-                                .shadow(radius: 3)
-                        }
-                        
-                        // Higher Button
-                        Button {
-                            handleGuess(.higher)
-                        } label: {
-                            Text("Higher")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(width: 100, height: 50)
-                                .background(Color.red)
-                                .cornerRadius(10)
-                                .shadow(radius: 3)
                         }
                     }
-                } else {
-                    // Start Round Button
-                    Button {
-                        if viewModel.remainingCards < 2 {
-                            viewModel.showReshuffleAlert = true
-                        } else {
-                            startNewRound()
-                        }
-                    } label: {
-                        Image("button")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 50)
-                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
-                
-                Spacer()
-                
-                HStack {
-                    Spacer()
-                    VStack{
-                        Text("Player")
-                            .font(.headline)
-                            .padding(.bottom, 10)
-                        Text(String(viewModel.playerScore))
-                            .font(.largeTitle)
-                    }
-                    Spacer()
-                    VStack{
-                        Text("Computer")
-                            .font(.headline)
-                            .padding(.bottom, 10)
-                        Text(String(viewModel.computerScore))
-                            .font(.largeTitle)
-                    }
-                    Spacer()
-                }
-                .padding(.bottom, 50)
-                .foregroundColor(.white)
             }
         }
         .onAppear {
             viewModel.setupGame(context: context)
         }
-        .alert("Out of Cards!", isPresented: $viewModel.showReshuffleAlert) {
+        .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
                 viewModel.resetDeck()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
+        }
+        .alert("Hardcore Run Finished", isPresented: $showHardcoreOutOfCardsAlert) {
+            Button("Quit Hardcore", role: .destructive) {
+                viewModel.finishHardcoreMode()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("You have run out of cards in Hardcore mode. You must quit to continue.")
         }
         .overlay {
             if showingRules {

@@ -15,7 +15,8 @@ struct CardGameByMahuApp: App {
         let schema = Schema([
             PlayingCard.self,
             GameScore.self,
-            RoundHistoryItem.self
+            RoundHistoryItem.self,
+            HardcoreResult.self
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

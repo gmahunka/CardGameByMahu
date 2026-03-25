@@ -14,7 +14,7 @@ enum Guess {
     case higher
     case equal
     case lower
-
+    
     var option: GuessOption {
         switch self {
         case .higher: return .higher
@@ -29,11 +29,26 @@ enum Guess {
 final class CardGameViewModel {
     
     private let deckSettings: DeckSettings
-
+    private let hardcoreEngine: HardcoreGameEngine
+    
+    // Stores normal-mode in-progress state while hardcore temporarily owns the deck.
+    private var normalModeSnapshot: NormalModeSnapshot?
+    
+    private struct NormalModeSnapshot {
+        let cardValues: [Int]
+        let playerScore: Int
+        let computerScore: Int
+        let remainingCards: Int
+        let playerCard: String
+        let computerCard: String
+        let waitingForGuess: Bool
+    }
+    
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
+        self.hardcoreEngine = HardcoreGameEngine(deckSettings: deckSettings)
     }
-
+    
     var playerScore: Int = 0
     var computerScore: Int = 0
     var remainingCards: Int = 0
@@ -43,7 +58,30 @@ final class CardGameViewModel {
     var isComputerFlipped: Bool = false
     var showReshuffleAlert: Bool = false
     var waitingForGuess: Bool = false
-
+    
+    // Forwarded from hardcore engine for backward compatibility
+    var isHardcoreMode: Bool {
+        get { hardcoreEngine.isHardcoreMode }
+        set {
+            if newValue && !hardcoreEngine.isHardcoreMode {
+                // Starting hardcore mode
+                startHardcoreMode()
+            } else if !newValue && hardcoreEngine.isHardcoreMode {
+                // Allows dismissal of the sheet
+                quitHardcoreMode()
+            }
+        }
+    }
+    var hardcoreElapsedTime: Double {
+        get { hardcoreEngine.elapsedTime }
+    }
+    var hardcoreOptimalGuessCount: Int {
+        get { hardcoreEngine.optimalGuessCount }
+    }
+    var hardcoreGuessCount: Int {
+        get { hardcoreEngine.guessCount }
+    }
+    
     private var computerValue: Int = 0
     private var playerValue: Int = 0
     private var scoreRecord: GameScore?
@@ -52,6 +90,7 @@ final class CardGameViewModel {
     
     func setupGame(context: ModelContext) {
         self.modelContext = context
+        hardcoreEngine.setModelContext(context)
         loadScores()
         
         // Move the "is the deck empty?" check here
@@ -122,7 +161,7 @@ final class CardGameViewModel {
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
-
+        
         // Reshuffle starts a new game session, so clear persisted round history.
         try? context.delete(model: RoundHistoryItem.self)
         try? context.save()
@@ -167,20 +206,15 @@ final class CardGameViewModel {
         guard waitingForGuess else { return }
 
         let chances = calculateChances(for: computerValue)
+        let optimalChoices = optimalScenarios(from: chances)
 
-        // Draw player's card
-        guard let newCardValue = drawCard() else {
-            // Handle empty deck mid-round if necessary
-            return
-        }
+        guard let newCardValue = drawCard() else { return }
 
         playerValue = newCardValue
         playerCard = "card\(playerValue)"
 
         let playerChoiceOption = guess.option
         let correctAnswerOption = correctAnswerOption(computer: computerValue, player: playerValue)
-
-        // Determine if guess was correct using stable values
         let guessCorrect = playerChoiceOption == correctAnswerOption
 
         let round = RoundHistoryItem(
@@ -191,11 +225,11 @@ final class CardGameViewModel {
             wasCorrect: guessCorrect,
             higherChance: chances.higher,
             equalChance: chances.equal,
-            lowerChance: chances.lower
+            lowerChance: chances.lower,
+            isHardcoreMode: isHardcoreMode
         )
         modelContext?.insert(round)
 
-        // Award point
         if guessCorrect {
             playerScore += 1
             scoreRecord?.playerScore = playerScore
@@ -204,31 +238,122 @@ final class CardGameViewModel {
             scoreRecord?.computerScore = computerScore
         }
 
+        if isHardcoreMode {
+            hardcoreEngine.recordGuess(isOptimal: optimalChoices.contains(playerChoiceOption))
+            if remainingCards < 2 {
+                hardcoreEngine.stopTimerWhenRunExhausted()
+            }
+        }
+
         try? modelContext?.save()
         waitingForGuess = false
     }
-
+    
+    private func optimalScenarios(from chances: (higher: Double, equal: Double, lower: Double)) -> Set<GuessOption> {
+        let ranked: [(GuessOption, Double)] = [
+            (.higher, chances.higher),
+            (.equal, chances.equal),
+            (.lower, chances.lower)
+        ]
+        
+        guard let maxValue = ranked.map(\.1).max() else { return [] }
+        return Set(ranked.filter { $0.1 == maxValue }.map(\.0))
+    }
+    
     private func correctAnswerOption(computer: Int, player: Int) -> GuessOption {
         if player > computer { return .higher }
         if player < computer { return .lower }
         return .equal
     }
-
+    
     private func calculateChances(for computer: Int) -> (higher: Double, equal: Double, lower: Double) {
         guard let context = modelContext else {
             return (higher: 0, equal: 0, lower: 0)
         }
-
+        
         let descriptor = FetchDescriptor<PlayingCard>()
         guard let cards = try? context.fetch(descriptor), !cards.isEmpty else {
             return (higher: 0, equal: 0, lower: 0)
         }
-
+        
         let total = Double(cards.count)
         let higher = Double(cards.filter { $0.value > computer }.count) / total
         let equal = Double(cards.filter { $0.value == computer }.count) / total
         let lower = Double(cards.filter { $0.value < computer }.count) / total
-
+        
         return (higher: higher, equal: equal, lower: lower)
     }
+    
+    func startHardcoreMode() {
+        guard let context = modelContext else { return }
+
+        // Save normal-mode progress once before hardcore replaces deck state.
+        if normalModeSnapshot == nil {
+            let descriptor = FetchDescriptor<PlayingCard>()
+            let normalCards = (try? context.fetch(descriptor)) ?? []
+            normalModeSnapshot = NormalModeSnapshot(
+                cardValues: normalCards.map(\.value),
+                playerScore: playerScore,
+                computerScore: computerScore,
+                remainingCards: remainingCards,
+                playerCard: playerCard,
+                computerCard: computerCard,
+                waitingForGuess: waitingForGuess
+            )
+        }
+
+        // Start hardcore engine
+        hardcoreEngine.start(with: context, playerScoreRecord: scoreRecord)
+        
+        // Reset UI state
+        computerCard = "back"
+        playerCard = "back"
+        waitingForGuess = false
+
+        try? context.save()
+        updateCardCount()
+    }
+
+    func quitHardcoreMode() {
+        hardcoreEngine.quit()
+        restoreNormalModeSnapshotIfNeeded()
+    }
+    
+    private func restoreNormalModeSnapshotIfNeeded() {
+        guard let context = modelContext, let snapshot = normalModeSnapshot else {
+            waitingForGuess = false
+            computerCard = "back"
+            playerCard = "back"
+            return
+        }
+        
+        try? context.delete(model: PlayingCard.self)
+        for value in snapshot.cardValues {
+            context.insert(PlayingCard(value: value))
+        }
+        
+        playerScore = snapshot.playerScore
+        computerScore = snapshot.computerScore
+        scoreRecord?.playerScore = snapshot.playerScore
+        scoreRecord?.computerScore = snapshot.computerScore
+        
+        playerCard = snapshot.playerCard
+        computerCard = snapshot.computerCard
+        waitingForGuess = snapshot.waitingForGuess
+        remainingCards = snapshot.remainingCards
+        
+        try? context.save()
+        updateCardCount()
+        normalModeSnapshot = nil
+    }
+    
+    func finishHardcoreMode() {
+        _ = hardcoreEngine.finish(playerScore: playerScore)
+        quitHardcoreMode()
+    }
+    
+    var hardcoreAccuracyPercent: Double {
+        hardcoreEngine.accuracyPercent
+    }
+    
 }
