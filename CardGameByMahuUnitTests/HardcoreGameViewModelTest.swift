@@ -25,6 +25,19 @@ struct HardcoreGameViewModelTest {
     private func makeDeckSettings() -> DeckSettings {
         DeckSettings()
     }
+    
+    private func waitUntil(
+        timeout: Duration = .seconds(1),
+        step: Duration = .milliseconds(20),
+        condition: @MainActor () -> Bool
+    ) async throws {
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline {
+            if condition() { return }
+            try await Task.sleep(for: step)
+        }
+        Issue.record("Timed out waiting for condition")
+    }
 
     // MARK: - Tests
 
@@ -53,8 +66,8 @@ struct HardcoreGameViewModelTest {
             #expect(counts[value] == 4)
         }
 
-        // Allow timer to tick at least once to execute timer closure branch.
-        try await Task.sleep(for: .milliseconds(150))
+        // Poll for timer progress to avoid scheduler-related flakiness.
+        try await waitUntil { sut.elapsedTime > 0 }
         #expect(sut.elapsedTime > 0)
     }
 
@@ -160,7 +173,7 @@ struct HardcoreGameViewModelTest {
 
         // Active branch: stops timer when hardcore mode is active.
         sut.start(with: context, playerScoreRecord: nil)
-        try await Task.sleep(for: .milliseconds(160))
+        try await waitUntil { sut.elapsedTime > 0 }
         let elapsedBeforeStop = sut.elapsedTime
 
         sut.stopTimerWhenRunExhausted()
@@ -178,14 +191,14 @@ struct HardcoreGameViewModelTest {
 
         sut.start(with: context, playerScoreRecord: nil)
         sut.recordGuess(isOptimal: true)
-        try await Task.sleep(for: .milliseconds(150))
+        try await waitUntil { sut.elapsedTime > 0 }
         let firstElapsed = sut.elapsedTime
 
         sut.start(with: context, playerScoreRecord: nil)
         #expect(sut.guessCount == 0)
         #expect(sut.optimalGuessCount == 0)
 
-        try await Task.sleep(for: .milliseconds(150))
+        try await waitUntil { sut.elapsedTime > 0 }
         #expect(sut.elapsedTime > 0)
         #expect(sut.elapsedTime < firstElapsed + 1.0) // confirms restart behavior
     }
