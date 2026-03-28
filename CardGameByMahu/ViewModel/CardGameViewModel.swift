@@ -29,7 +29,7 @@ enum Guess {
 final class CardGameViewModel {
     
     private let deckSettings: DeckSettings
-    private let hardcoreEngine: HardcoreGameEngine
+    private let hardCoreGameViewModel: HardCoreGameViewModel
     
     // Stores normal-mode in-progress state while hardcore temporarily owns the deck.
     private var normalModeSnapshot: NormalModeSnapshot?
@@ -46,7 +46,7 @@ final class CardGameViewModel {
     
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
-        self.hardcoreEngine = HardcoreGameEngine(deckSettings: deckSettings)
+        self.hardCoreGameViewModel = HardCoreGameViewModel(deckSettings: deckSettings)
     }
     
     var playerScore: Int = 0
@@ -61,25 +61,25 @@ final class CardGameViewModel {
     
     // Forwarded from hardcore engine for backward compatibility
     var isHardcoreMode: Bool {
-        get { hardcoreEngine.isHardcoreMode }
+        get { hardCoreGameViewModel.isHardcoreMode }
         set {
-            if newValue && !hardcoreEngine.isHardcoreMode {
+            if newValue && !hardCoreGameViewModel.isHardcoreMode {
                 // Starting hardcore mode
                 startHardcoreMode()
-            } else if !newValue && hardcoreEngine.isHardcoreMode {
+            } else if !newValue && hardCoreGameViewModel.isHardcoreMode {
                 // Allows dismissal of the sheet
                 quitHardcoreMode()
             }
         }
     }
     var hardcoreElapsedTime: Double {
-        get { hardcoreEngine.elapsedTime }
+        get { hardCoreGameViewModel.elapsedTime }
     }
     var hardcoreOptimalGuessCount: Int {
-        get { hardcoreEngine.optimalGuessCount }
+        get { hardCoreGameViewModel.optimalGuessCount }
     }
     var hardcoreGuessCount: Int {
-        get { hardcoreEngine.guessCount }
+        get { hardCoreGameViewModel.guessCount }
     }
     
     private var computerValue: Int = 0
@@ -90,7 +90,7 @@ final class CardGameViewModel {
     
     func setupGame(context: ModelContext) {
         self.modelContext = context
-        hardcoreEngine.setModelContext(context)
+        hardCoreGameViewModel.setModelContext(context)
         loadScores()
         
         // Move the "is the deck empty?" check here
@@ -239,9 +239,9 @@ final class CardGameViewModel {
         }
 
         if isHardcoreMode {
-            hardcoreEngine.recordGuess(isOptimal: optimalChoices.contains(playerChoiceOption))
+            hardCoreGameViewModel.recordGuess(isOptimal: optimalChoices.contains(playerChoiceOption))
             if remainingCards < 2 {
-                hardcoreEngine.stopTimerWhenRunExhausted()
+                hardCoreGameViewModel.stopTimerWhenRunExhausted()
             }
         }
 
@@ -303,7 +303,7 @@ final class CardGameViewModel {
         }
 
         // Start hardcore engine
-        hardcoreEngine.start(with: context, playerScoreRecord: scoreRecord)
+        hardCoreGameViewModel.start(with: context, playerScoreRecord: scoreRecord)
         
         // Reset UI state
         computerCard = "back"
@@ -315,7 +315,7 @@ final class CardGameViewModel {
     }
 
     func quitHardcoreMode() {
-        hardcoreEngine.quit()
+        hardCoreGameViewModel.quit()
         restoreNormalModeSnapshotIfNeeded()
     }
     
@@ -348,12 +348,12 @@ final class CardGameViewModel {
     }
     
     func finishHardcoreMode() {
-        _ = hardcoreEngine.finish(playerScore: playerScore)
+        _ = hardCoreGameViewModel.finish(playerScore: playerScore)
         quitHardcoreMode()
     }
     
     var hardcoreAccuracyPercent: Double {
-        hardcoreEngine.accuracyPercent
+        hardCoreGameViewModel.accuracyPercent
     }
     
 }
