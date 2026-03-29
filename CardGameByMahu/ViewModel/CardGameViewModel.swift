@@ -133,36 +133,29 @@ final class CardGameViewModel {
     
     func resetDeck() {
         guard let context = modelContext else { return }
-        
-        // 1. Clear out any existing cards in the database
+
         try? context.delete(model: PlayingCard.self)
-        
-        // 2. Build the deck from current setup configuration
+
         for value in DeckSettings.minCardValue...DeckSettings.maxCardValue {
             let count = deckSettings.count(for: value)
             guard count > 0 else { continue }
             for _ in 0..<count {
-                let newCard = PlayingCard(value: value)
-                context.insert(newCard)
+                context.insert(PlayingCard(value: value))
             }
         }
-        
-        // Save the fresh deck
+
         playerScore = 0
         computerScore = 0
         scoreRecord?.playerScore = playerScore
         scoreRecord?.computerScore = computerScore
-        
+
         try? context.save()
         updateCardCount()
-        
-        
-        
+
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
-        
-        // Reshuffle starts a new game session, so clear persisted round history.
+
         try? context.delete(model: RoundHistoryItem.self)
         try? context.save()
     }

@@ -17,31 +17,43 @@ struct CardConfiguration: Identifiable {
 final class SetupViewModel {
     private let deckSettings: DeckSettings
 
+    var cardConfigs: [CardConfiguration]
+
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
-    }
-
-    var cardConfigs: [CardConfiguration] {
-        (DeckSettings.minCardValue...DeckSettings.maxCardValue).map { value in
+        self.cardConfigs = (DeckSettings.minCardValue...DeckSettings.maxCardValue).map { value in
             CardConfiguration(id: value, count: deckSettings.count(for: value))
         }
     }
 
     func decreaseCount(for value: Int) {
-        let updated = deckSettings.count(for: value) - 1
-        deckSettings.setCount(updated, for: value)
+        updateCount(value, count: count(for: value) - 1)
     }
 
     func increaseCount(for value: Int) {
-        let updated = deckSettings.count(for: value) + 1
-        deckSettings.setCount(updated, for: value)
+        updateCount(value, count: count(for: value) + 1)
     }
 
     func updateCount(_ value: Int, count: Int) {
         deckSettings.setCount(count, for: value)
+        if let index = cardConfigs.firstIndex(where: { $0.id == value }) {
+            cardConfigs[index].count = deckSettings.count(for: value)
+        }
     }
 
     func resetToRegularDeck() {
         deckSettings.resetToRegularDeck()
+        syncFromDeckSettings()
+    }
+
+    private func count(for value: Int) -> Int {
+        cardConfigs.first(where: { $0.id == value })?.count ?? deckSettings.count(for: value)
+    }
+
+    private func syncFromDeckSettings() {
+        for index in cardConfigs.indices {
+            let value = cardConfigs[index].id
+            cardConfigs[index].count = deckSettings.count(for: value)
+        }
     }
 }
