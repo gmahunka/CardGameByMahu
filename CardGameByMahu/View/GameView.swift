@@ -197,6 +197,8 @@ struct GameView: View {
                                 .scaledToFit()
                                 .frame(height: 44)
                         }
+                        .accessibilityIdentifier("dealButton")
+                        .accessibilityLabel("Deal")
                     }
                     
                     HStack(spacing: 16) {

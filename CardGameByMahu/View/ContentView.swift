@@ -25,21 +25,27 @@ struct ContentView: View {
             })
             .tabItem {
                 Label("Setup", systemImage: "slider.horizontal.3")
+                    .accessibilityIdentifier("setupTab")
+                    .accessibilityLabel("Setup")
             }
 
             GameView(viewModel: gameViewModel)
                 .tabItem {
                     Label("Play", systemImage: "play.circle.fill")
+                        .accessibilityIdentifier("playTab")
+                        .accessibilityLabel("Play")
                 }
-
+                    
             HistoryView()
                 .tabItem {
                     Label("History", systemImage: "list.clipboard.fill")
+                        .accessibilityIdentifier("historyTab")
                 }
 
             LeaderboardView()
                 .tabItem {
                     Label("Leaderboard", systemImage: "trophy.fill")
+                        .accessibilityIdentifier("leaderboardTab")
                 }
         }
         .tabViewStyle(.grouped)
