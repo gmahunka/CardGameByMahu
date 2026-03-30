@@ -55,13 +55,11 @@ struct SetupViewModelTest {
         let settings = DeckSettings()
         let sut = SetupViewModel(deckSettings: settings)
         let value = DeckSettings.minCardValue
-
-        // Ensure we start above any potential lower bound logic.
-        settings.setCount(3, for: value)
-
+        let original = settings.count(for: value)
+    
         sut.decreaseCount(for: value)
 
-        #expect(settings.count(for: value) == 2)
+        #expect(settings.count(for: value) == original - 1)
     }
 
     @Test("updateCount sets exact value")

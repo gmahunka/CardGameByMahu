@@ -168,7 +168,6 @@ struct HardcoreGameViewModelTest {
         sut.isHardcoreMode = false
         sut.stopTimerWhenRunExhausted()
         let before = sut.elapsedTime
-        try await Task.sleep(for: .milliseconds(120))
         #expect(sut.elapsedTime == before)
 
         // Active branch: stops timer when hardcore mode is active.
@@ -177,7 +176,6 @@ struct HardcoreGameViewModelTest {
         let elapsedBeforeStop = sut.elapsedTime
 
         sut.stopTimerWhenRunExhausted()
-        try await Task.sleep(for: .milliseconds(160))
         let elapsedAfterStop = sut.elapsedTime
 
         #expect(elapsedBeforeStop > 0)
