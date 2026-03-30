@@ -9,8 +9,6 @@ import XCTest
 @testable import CardGameByMahu
 
 extension XCUIElement {
-    /// Scrolls within this scroll view (or its container) until the target element becomes hittable.
-    /// On macOS, uses PageDown/PageUp key events which are more reliable than drag gestures in tests.
     func scrollToMakeElementHittable(_ element: XCUIElement, in app: XCUIApplication, maxScrolls: Int = 12, direction: ScrollDirection = .down) {
         guard self.exists else { return }
         if element.isHittable { return }
@@ -40,6 +38,9 @@ final class CardGameByMahuUITests: XCTestCase {
     
     override func setUpWithError() throws {
         continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments.append("-uitesting")
+        app.launch()
     }
     
     override func tearDownWithError() throws {
@@ -105,7 +106,6 @@ final class CardGameByMahuUITests: XCTestCase {
         
         element.click()
         
-        let scrollView = app.scrollViews.firstMatch
         let higher = app.buttons["Higher"].firstMatch
         higher.click()
         
@@ -125,10 +125,9 @@ final class CardGameByMahuUITests: XCTestCase {
     
     func testInfoPanel() {
         let app = XCUIApplication()
-        app.launch()
+        app.activate()
         app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
-        let scrollView = app.scrollViews.firstMatch
         let infoButton = app.buttons["Info"].firstMatch
         infoButton.click()
         
@@ -138,7 +137,7 @@ final class CardGameByMahuUITests: XCTestCase {
     func testTooFewCardsRemain() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["Setup"]/*[[".tabGroups",".tabs[\"Setup\"]",".tabs[\"slider.horizontal.3\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[1]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.tabs["setupTab"].firstMatch.click()
         
         let minusButtons = app.buttons.matching(identifier: "minus.circle.fill")
         let typeOfCards = 0..<12
@@ -150,14 +149,51 @@ final class CardGameByMahuUITests: XCTestCase {
                 target.click()
             }
         }
-        app.buttons["Save & Apply"].firstMatch.click()
-        app/*@START_MENU_TOKEN@*/.tabs["Play"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"play.circle.fill\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[1]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.buttons["saveApplyButton"].firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+
+        for _ in 0..<2 {
+            app.buttons["dealButton"].firstMatch.click()
+            app/*@START_MENU_TOKEN@*/.buttons["Higher"]/*[[".scrollViews.buttons[\"Higher\"]",".buttons[\"Higher\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        }
         
         app.buttons["dealButton"].firstMatch.click()
-        app/*@START_MENU_TOKEN@*/.buttons["Higher"]/*[[".scrollViews.buttons[\"Higher\"]",".buttons[\"Higher\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.buttons["reshuffleAlertCancelButton"].firstMatch.click()
         
         app.buttons["dealButton"].firstMatch.click()
+        app.buttons["reshuffleAlertButton"].firstMatch.click()
+    }
+    
+    func testHardcoreQuit() {
+        let app = XCUIApplication()
+        app.activate()
+        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.buttons["Hardcore Mode"]/*[[".groups.buttons[\"Hardcore Mode\"]",".buttons[\"Hardcore Mode\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
+        app/*@START_MENU_TOKEN@*/.sheets.buttons["Equal"].firstMatch/*[[".buttons.matching(identifier: \"Equal\").element(boundBy: 0)",".sheets.buttons[\"Equal\"].firstMatch"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.click()
+        app/*@START_MENU_TOKEN@*/.buttons["quitHardcoreButton"]/*[[".groups",".buttons[\"Quit\"]",".buttons[\"quitHardcoreButton\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
+    }
+    
+    func testHardcoreExit() {
+        let app = XCUIApplication()
+        app.activate()
+        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.buttons["Hardcore Mode"]/*[[".groups.buttons[\"Hardcore Mode\"]",".buttons[\"Hardcore Mode\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        for _ in 0..<26 {
+            app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
+            app/*@START_MENU_TOKEN@*/.sheets.buttons["Equal"].firstMatch/*[[".buttons.matching(identifier: \"Equal\").element(boundBy: 0)",".sheets.buttons[\"Equal\"].firstMatch"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.click()
+        }
+        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
+        
+        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
+        app.sheets.buttons["quitHardcoreButtonCancel"].firstMatch.click()
+        
+        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
+        app.sheets.buttons["quitHardcoreButtonAfterFinish"].firstMatch.click()
+        
+        app.tabs["historyTab"].firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
     }
 }
 
