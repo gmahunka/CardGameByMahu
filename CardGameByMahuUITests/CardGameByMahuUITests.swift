@@ -51,7 +51,6 @@ final class CardGameByMahuUITests: XCTestCase {
     func testSetupTab() {
         let app = XCUIApplication()
         app.activate()
-        
         app/*@START_MENU_TOKEN@*/.tabs["Setup"]/*[[".tabGroups",".tabs[\"Setup\"]",".tabs[\"slider.horizontal.3\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[1]]@END_MENU_TOKEN@*/.firstMatch.click()
         
         let minusButtons = app.buttons.matching(identifier: "minus.circle.fill")
@@ -128,10 +127,10 @@ final class CardGameByMahuUITests: XCTestCase {
         app.activate()
         app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
-        let infoButton = app.buttons["Info"].firstMatch
+        let infoButton = app.buttons["showRulesButton"].firstMatch
         infoButton.click()
         
-        app/*@START_MENU_TOKEN@*/.buttons["Dismiss"]/*[[".groups.buttons[\"Dismiss\"]",".buttons[\"Dismiss\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.buttons["dismissRulesButton"].firstMatch.click()
     }
     
     func testTooFewCardsRemain() {

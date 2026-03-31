@@ -63,6 +63,7 @@ struct GameView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.trailing, 12)
+                        .accessibilityIdentifier("showRulesButton")
                         .padding(.top, 12)
                     }
                     
@@ -275,6 +276,7 @@ struct GameView: View {
                             withAnimation { showingRules = false }
                         }
                         .buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier("dismissRulesButton")
                         .padding(.top, 10)
                     }
                     .padding(40)
