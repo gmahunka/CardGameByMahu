@@ -79,6 +79,8 @@ final class CardGameByMahuUITests: XCTestCase {
         XCTAssertEqual(firstCountField.value as? String, "1", "Count should return to 1 after one plus tap.")
         
         app.buttons["saveApplyButton"].firstMatch.click()
+        app.buttons["resetDeckOfCardstoRegularButton"].firstMatch.click()
+        
     }
     
     func testTabs() {

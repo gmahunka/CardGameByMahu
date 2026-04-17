@@ -35,6 +35,7 @@ struct SetupView: View {
                 .background(Color.blue)
                 .cornerRadius(10)
             }
+            .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
             .padding(.horizontal)
             .padding(.bottom, 5)
 
