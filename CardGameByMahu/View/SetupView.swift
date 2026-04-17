@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct SetupView: View {
     @Bindable var viewModel: SetupViewModel
@@ -13,7 +14,6 @@ struct SetupView: View {
 
     var body: some View {
         VStack {
-            // Header
             HStack {
                 Image(systemName: "gearshape.fill")
                     .font(.largeTitle)
@@ -22,7 +22,6 @@ struct SetupView: View {
             }
             .padding(.top)
 
-            // 1. Regular Deck Option
             Button(action: {
                 viewModel.resetToRegularDeck()
             }) {
@@ -37,22 +36,20 @@ struct SetupView: View {
                 .background(Color.blue)
                 .cornerRadius(10)
             }
+            .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
             .padding(.horizontal)
             .padding(.bottom, 5)
-            
-            // 2. List of Cards with input boxes
+
             List(viewModel.cardConfigs) { config in
                 HStack(alignment: .center) {
                     Spacer(minLength: 0)
 
-                    // Show the actual card image instead of text
                     Image("card\(config.id)")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 70, height: 100)
                         .shadow(radius: 2)
                         .padding(.trailing, 8)
-
 
                     Button(action: {
                         viewModel.decreaseCount(for: config.id)
@@ -69,13 +66,15 @@ struct SetupView: View {
                         "Count",
                         value: Binding(
                             get: { config.count },
-                            set: { newValue in viewModel.updateCount(config.id, count: newValue) }
+                            set: { newValue in
+                                viewModel.updateCount(config.id, count: newValue)
+                            }
                         ),
                         format: .number
                     )
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 60)
-                        .multilineTextAlignment(.center)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 60)
+                    .multilineTextAlignment(.center)
 
                     Button(action: {
                         viewModel.increaseCount(for: config.id)
@@ -93,10 +92,12 @@ struct SetupView: View {
                 .padding(.vertical, 8)
             }
             .listStyle(.plain)
-            
-            // 3. Apply Button
+
             Button(action: {
-                onApply()
+                NSApp.keyWindow?.makeFirstResponder(nil)
+                DispatchQueue.main.async {
+                    onApply()
+                }
             }) {
                 Text("Save & Apply")
                     .font(.title3)
@@ -107,6 +108,7 @@ struct SetupView: View {
                     .background(Color.green)
                     .cornerRadius(10)
             }
+            .accessibilityIdentifier("saveApplyButton")
             .padding()
         }
     }

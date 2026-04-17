@@ -32,6 +32,7 @@ struct HardcoreGameView: View {
                             .background(Color.red.opacity(0.75))
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
+                    .accessibilityIdentifier("quitHardcoreButton")
 
                     Spacer()
 

@@ -9,8 +9,11 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var setupViewModel: SetupViewModel
     @State private var gameViewModel: CardGameViewModel
+    @State private var didSetupGameContext = false
+
 
     init() {
         let sharedDeckSettings = DeckSettings()
@@ -25,21 +28,32 @@ struct ContentView: View {
             })
             .tabItem {
                 Label("Setup", systemImage: "slider.horizontal.3")
+                    .accessibilityIdentifier("setupTab")
+                    .accessibilityLabel("Setup")
             }
+            .onAppear {
+                        guard !didSetupGameContext else { return }
+                        gameViewModel.setupGame(context: modelContext)
+                        didSetupGameContext = true
+                    }
 
             GameView(viewModel: gameViewModel)
                 .tabItem {
                     Label("Play", systemImage: "play.circle.fill")
+                        .accessibilityIdentifier("playTab")
+                        .accessibilityLabel("Play")
                 }
-
+                    
             HistoryView()
                 .tabItem {
                     Label("History", systemImage: "list.clipboard.fill")
+                        .accessibilityIdentifier("historyTab")
                 }
 
             LeaderboardView()
                 .tabItem {
                     Label("Leaderboard", systemImage: "trophy.fill")
+                        .accessibilityIdentifier("leaderboardTab")
                 }
         }
         .tabViewStyle(.grouped)

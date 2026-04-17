@@ -11,7 +11,7 @@ import Observation
 
 @Observable
 @MainActor
-final class HardcoreGameEngine {
+final class HardCoreGameViewModel {
     
     private let deckSettings: DeckSettings
     private var modelContext: ModelContext?

@@ -63,6 +63,7 @@ struct GameView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.trailing, 12)
+                        .accessibilityIdentifier("showRulesButton")
                         .padding(.top, 12)
                     }
                     
@@ -197,6 +198,8 @@ struct GameView: View {
                                 .scaledToFit()
                                 .frame(height: 44)
                         }
+                        .accessibilityIdentifier("dealButton")
+                        .accessibilityLabel("Deal")
                     }
                     
                     HStack(spacing: 16) {
@@ -230,7 +233,9 @@ struct GameView: View {
             Button("Reshuffle Deck", role: .none) {
                 viewModel.resetDeck()
             }
+            .accessibilityIdentifier("reshuffleAlertButton")
             Button("Cancel", role: .cancel) { }
+                .accessibilityIdentifier("reshuffleAlertCancelButton")
         } message: {
             Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
         }
@@ -238,7 +243,10 @@ struct GameView: View {
             Button("Quit Hardcore", role: .destructive) {
                 viewModel.finishHardcoreMode()
             }
+            .accessibilityIdentifier("quitHardcoreButtonAfterFinish")
             Button("Cancel", role: .cancel) { }
+            .accessibilityIdentifier("quitHardcoreButtonCancel")
+
         } message: {
             Text("You have run out of cards in Hardcore mode. You must quit to continue.")
         }
@@ -268,6 +276,7 @@ struct GameView: View {
                             withAnimation { showingRules = false }
                         }
                         .buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier("dismissRulesButton")
                         .padding(.top, 10)
                     }
                     .padding(40)
