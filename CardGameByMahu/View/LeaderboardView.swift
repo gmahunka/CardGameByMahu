@@ -9,6 +9,9 @@ import SwiftUI
 import SwiftData
 
 struct LeaderboardView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var resultToDelete: HardcoreResult?
+    
     @Query(sort: [
         SortDescriptor(\HardcoreResult.scoreReached, order: .reverse),
         SortDescriptor(\HardcoreResult.accuracy, order: .reverse),
@@ -40,33 +43,67 @@ struct LeaderboardView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(Array(results.enumerated()), id: \.element.id) { index, result in
-                    HStack(spacing: 12) {
-                        Text("#\(index + 1)")
-                            .font(.headline)
-                            .frame(width: 36, alignment: .leading)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Score: \(result.scoreReached)")
+                List {
+                    ForEach(Array(results.enumerated()), id: \.element.id) { index, result in
+                        HStack(spacing: 12) {
+                            Text("#\(index + 1)")
                                 .font(.headline)
-                            Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
-                                .font(.subheadline)
-                            Text(String(format: "Time: %.1fs", result.timeTaken))
-                                .font(.subheadline)
+                                .frame(width: 36, alignment: .leading)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Score: \(result.scoreReached)")
+                                    .font(.headline)
+                                Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
+                                    .font(.subheadline)
+                                Text(String(format: "Time: %.1fs", result.timeTaken))
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Text(result.date, format: .dateTime.year().month().day().hour().minute())
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
+
+                            Button(action: {
+                                resultToDelete = result
+                            }) {
+                                Image(systemName: "trash.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(.red)
+                            }
+                            .buttonStyle(.plain)
                         }
-
-                        Spacer()
-
-                        Text(result.date, format: .dateTime.year().month().day().hour().minute())
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .padding(.vertical, 6)
                     }
-                    .padding(.vertical, 6)
                 }
                 .listStyle(.plain)
             }
         }
         .padding(.horizontal)
+        .alert("Delete Entry?", isPresented: .constant(resultToDelete != nil)) {
+            Button("Cancel", role: .cancel) {
+                resultToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let result = resultToDelete {
+                    deleteResult(result)
+                    resultToDelete = nil
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this leaderboard entry? This action cannot be undone.")
+        }
+    }
+
+    private func deleteResult(_ result: HardcoreResult) {
+        modelContext.delete(result)
+
+        do {
+            try modelContext.save()
+        } catch {
+            assertionFailure("Failed to delete leaderboard entry: \(error)")
+        }
     }
 }
