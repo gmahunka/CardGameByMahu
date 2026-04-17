@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct SetupView: View {
     @Bindable var viewModel: SetupViewModel
