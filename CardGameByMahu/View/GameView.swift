@@ -154,6 +154,7 @@ struct GameView: View {
                                     .background(Color.blue)
                                     .cornerRadius(8)
                             }
+                            .keyboardShortcut(.leftArrow, modifiers: [])
                             
                             Button {
                                 handleGuess(.equal)
@@ -166,6 +167,7 @@ struct GameView: View {
                                     .background(Color.green)
                                     .cornerRadius(8)
                             }
+                            .keyboardShortcut(.downArrow, modifiers: [])
                             
                             Button {
                                 handleGuess(.higher)
@@ -178,6 +180,7 @@ struct GameView: View {
                                     .background(Color.red)
                                     .cornerRadius(8)
                             }
+                            .keyboardShortcut(.rightArrow, modifiers: [])
                         }
                         .padding(.horizontal, 16)
                     } else {
@@ -200,6 +203,7 @@ struct GameView: View {
                         }
                         .accessibilityIdentifier("dealButton")
                         .accessibilityLabel("Deal")
+                        .keyboardShortcut(.space, modifiers: [])
                     }
                     
                     HStack(spacing: 16) {
