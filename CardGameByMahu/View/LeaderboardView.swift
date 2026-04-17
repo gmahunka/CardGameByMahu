@@ -52,8 +52,11 @@ struct LeaderboardView: View {
             HStack(spacing: 12) {
                 Picker("Sort by:", selection: $sortOption) {
                     Text("Score").tag(SortOption.score)
+                        .accessibilityIdentifier("sortByScoreButton")
                     Text("Accuracy").tag(SortOption.accuracy)
+                        .accessibilityIdentifier("sortByAccuracyButton")
                     Text("Time").tag(SortOption.time)
+                        .accessibilityIdentifier("sortByTimeButton")
                 }
                 .pickerStyle(.segmented)
             }
@@ -122,6 +125,7 @@ struct LeaderboardView: View {
                             }
                             .buttonStyle(.plain)
                         }
+                        .accessibilityIdentifier("deleteLeaderboardEntrybutton")
                         .padding(.vertical, 6)
                     }
                 }
@@ -133,12 +137,14 @@ struct LeaderboardView: View {
             Button("Cancel", role: .cancel) {
                 resultToDelete = nil
             }
+            .accessibilityIdentifier("cancelDeleteEntryButton")
             Button("Delete", role: .destructive) {
                 if let result = resultToDelete {
                     deleteResult(result)
                     resultToDelete = nil
                 }
             }
+            .accessibilityIdentifier("confirmDeleteEntryButton")
         } message: {
             Text("Are you sure you want to delete this leaderboard entry? This action cannot be undone.")
         }

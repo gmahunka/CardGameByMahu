@@ -195,6 +195,25 @@ final class CardGameByMahuUITests: XCTestCase {
         
         app.tabs["historyTab"].firstMatch.click()
         app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        
+        app.radioButtons["sortByScoreButton"].firstMatch.click()
+        app.radioButtons["sortByAccuracyButton"].firstMatch.click()
+        app.radioButtons["sortByTimeButton"].firstMatch.click()
+        
+        app.buttons["deleteLeaderboardEntrybutton"].firstMatch.click()
+        app.buttons["cancelDeleteEntryButton"].firstMatch.click()
+        app.buttons["deleteLeaderboardEntrybutton"].firstMatch.click()
+        app.buttons["confirmDeleteEntryButton"].firstMatch.click()
+    }
+    
+    func testSome() {
+        let app = XCUIApplication()
+        app.activate()
+        app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.buttons.matching(identifier: "deleteLeaderboardEntrybutton").element(boundBy: 6).click()
+        app/*@START_MENU_TOKEN@*/.buttons["cancelDeleteEntryButton"]/*[[".sheets[\"_NS:87\"].buttons",".sheets",".buttons[\"Cancel\"]",".buttons[\"cancelDeleteEntryButton\"]"],[[[-1,3],[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+   
+        
     }
 }
 
