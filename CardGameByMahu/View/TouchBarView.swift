@@ -57,7 +57,21 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
 
     private func refreshTouchBar() {
         guard let window else { return }
-        window.touchBar = isVisible ? makeTouchBar() : nil
+
+        guard isVisible else {
+            window.touchBar = nil
+            return
+        }
+
+        // Rebuild the Touch Bar on state changes to avoid stale items after tab switches.
+        window.touchBar = nil
+        window.touchBar = makeTouchBar()
+
+        // Selecting the tab can leave first responder on tab controls, which delays Touch Bar display.
+        DispatchQueue.main.async { [weak window] in
+            guard let window else { return }
+            _ = window.makeFirstResponder(window.contentView)
+        }
     }
 
     private func makeTouchBar() -> NSTouchBar? {
@@ -75,27 +89,19 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
     func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
         switch identifier {
         case Self.dealIdentifier:
-            return buttonItem(title: "Deal", symbolName: "hand.point.up.left.fill", action: #selector(dealPressed))
+            return buttonItem(identifier: identifier, title: "Deal", symbolName: "hand.point.up.left.fill", action: #selector(dealPressed))
         case Self.lowerIdentifier:
-            return buttonItem(title: "Lower", symbolName: "arrow.down.circle.fill", action: #selector(lowerPressed))
+            return buttonItem(identifier: identifier, title: "Lower", symbolName: "arrow.down.circle.fill", action: #selector(lowerPressed))
         case Self.equalIdentifier:
-            return buttonItem(title: "Equal", symbolName: "equal.circle.fill", action: #selector(equalPressed))
+            return buttonItem(identifier: identifier, title: "Equal", symbolName: "equal.circle.fill", action: #selector(equalPressed))
         case Self.higherIdentifier:
-            return buttonItem(title: "Higher", symbolName: "arrow.up.circle.fill", action: #selector(higherPressed))
+            return buttonItem(identifier: identifier, title: "Higher", symbolName: "arrow.up.circle.fill", action: #selector(higherPressed))
         default:
             return nil
         }
     }
 
-    private func buttonItem(title: String, symbolName: String, action: Selector) -> NSTouchBarItem {
-        let identifier: NSTouchBarItem.Identifier
-        switch title {
-        case "Touch Bar Deal": identifier = Self.dealIdentifier
-        case "Touch Bar Lower": identifier = Self.lowerIdentifier
-        case "Touch Bar Equal": identifier = Self.equalIdentifier
-        default: identifier = Self.higherIdentifier
-        }
-
+    private func buttonItem(identifier: NSTouchBarItem.Identifier, title: String, symbolName: String, action: Selector) -> NSTouchBarItem {
         let item = NSButtonTouchBarItem(identifier: identifier, title: title, target: self, action: action)
         let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
         symbolImage?.isTemplate = true

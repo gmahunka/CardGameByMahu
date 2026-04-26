@@ -7,13 +7,12 @@
 
 import SwiftUI
 import SwiftData
-import AppKit
 
 struct GameView: View {
     
     @Environment(\.modelContext) private var context
     @Bindable var viewModel: CardGameViewModel
-    var onVisibilityChange: ((Bool) -> Void)? = nil
+    var touchBarViewModel: TouchBarViewModel? = nil
     @State private var showingRules = false
     @State private var showHardcoreOutOfCardsAlert = false
     
@@ -232,9 +231,16 @@ struct GameView: View {
                 }
             }
         }
-        .background(TouchBarVisibilityObserver(onVisibilityChange: onVisibilityChange))
         .onAppear {
             viewModel.setupGame(context: context)
+            touchBarViewModel?.setActionHandlers(
+                deal: { startNewRound() },
+                guess: { guess in handleGuess(guess) }
+            )
+            touchBarViewModel?.refresh()
+        }
+        .onDisappear {
+            touchBarViewModel?.setActionHandlers(deal: nil, guess: nil)
         }
         .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
@@ -347,53 +353,6 @@ struct GameView: View {
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 playerRotation = 180
             }
-        }
-    }
-}
-
-private struct TouchBarVisibilityObserver: NSViewRepresentable {
-    let onVisibilityChange: ((Bool) -> Void)?
-
-    func makeNSView(context: Context) -> VisibilityTrackingView {
-        let view = VisibilityTrackingView()
-        view.onVisibilityChange = onVisibilityChange
-        return view
-    }
-
-    func updateNSView(_ nsView: VisibilityTrackingView, context: Context) {
-        nsView.onVisibilityChange = onVisibilityChange
-        nsView.reportVisibility()
-    }
-
-    final class VisibilityTrackingView: NSView {
-        var onVisibilityChange: ((Bool) -> Void)?
-        private var lastVisibleState: Bool?
-
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            reportVisibility()
-        }
-
-        override func viewDidHide() {
-            super.viewDidHide()
-            reportVisibility()
-        }
-
-        override func viewDidUnhide() {
-            super.viewDidUnhide()
-            reportVisibility()
-        }
-
-        override func layout() {
-            super.layout()
-            reportVisibility()
-        }
-
-        func reportVisibility() {
-            let isVisible = window != nil && !isHiddenOrHasHiddenAncestor
-            guard lastVisibleState != isVisible else { return }
-            lastVisibleState = isVisible
-            onVisibilityChange?(isVisible)
         }
     }
 }

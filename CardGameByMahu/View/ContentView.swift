@@ -9,11 +9,19 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    private enum AppTab: Hashable {
+        case setup
+        case play
+        case history
+        case leaderboard
+    }
+
     @Environment(\.modelContext) private var modelContext
     @State private var setupViewModel: SetupViewModel
     @State private var gameViewModel: CardGameViewModel
     @State private var touchBarViewModel: TouchBarViewModel
     @State private var didSetupGameContext = false
+    @State private var selectedTab: AppTab = .setup
 
 
     init() {
@@ -25,7 +33,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             SetupView(viewModel: setupViewModel, onApply: {
                 gameViewModel.resetDeck()
             })
@@ -34,21 +42,15 @@ struct ContentView: View {
                 Label("Setup", systemImage: "slider.horizontal.3")
                     .accessibilityIdentifier("setupTab")
             }
-            .onAppear {
-                touchBarViewModel.setPlayTabVisible(false)
-                guard !didSetupGameContext else { return }
-                gameViewModel.setupGame(context: modelContext)
-                didSetupGameContext = true
-            }
+            .tag(AppTab.setup)
 
-            GameView(viewModel: gameViewModel, onVisibilityChange: { isVisible in
-                touchBarViewModel.setPlayTabVisible(isVisible)
-            })
+            GameView(viewModel: gameViewModel, touchBarViewModel: touchBarViewModel)
             .accessibilityIdentifier("playTab")
                 .tabItem {
                     Label("Play", systemImage: "play.circle.fill")
                     .accessibilityIdentifier("playTab")
                 }
+                .tag(AppTab.play)
                     
             HistoryView()
                 .accessibilityIdentifier("historyTab")
@@ -56,6 +58,7 @@ struct ContentView: View {
                     Label("History", systemImage: "list.clipboard.fill")
                     .accessibilityIdentifier("historyTab")
                 }
+                .tag(AppTab.history)
 
             LeaderboardView()
                 .accessibilityIdentifier("leaderboardTab")
@@ -63,6 +66,7 @@ struct ContentView: View {
                     Label("Leaderboard", systemImage: "trophy.fill")
                     .accessibilityIdentifier("leaderboardTab")
                 }
+                .tag(AppTab.leaderboard)
         }
         .tabViewStyle(.grouped)
         .sheet(isPresented: $gameViewModel.isHardcoreMode) {
@@ -70,6 +74,24 @@ struct ContentView: View {
                 .interactiveDismissDisabled(true)
         }
         .tint(.orange)
+        .onAppear {
+            guard !didSetupGameContext else {
+                touchBarViewModel.setPlayTabVisible(selectedTab == .play)
+                return
+            }
+
+            gameViewModel.setupGame(context: modelContext)
+            didSetupGameContext = true
+            touchBarViewModel.setPlayTabVisible(selectedTab == .play)
+        }
+        .onChange(of: selectedTab) { _, newValue in
+            touchBarViewModel.setPlayTabVisible(newValue == .play)
+            if newValue == .play {
+                DispatchQueue.main.async {
+                    touchBarViewModel.refresh()
+                }
+            }
+        }
         .onChange(of: gameViewModel.waitingForGuess) { _, _ in
             touchBarViewModel.refresh()
         }
