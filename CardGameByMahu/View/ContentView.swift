@@ -9,22 +9,15 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    private enum AppTab: Hashable {
-        case setup
-        case play
-        case history
-        case leaderboard
-    }
-
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject var navigation: AppNavigationModel
     @State private var setupViewModel: SetupViewModel
     @State private var gameViewModel: CardGameViewModel
     @State private var touchBarViewModel: TouchBarViewModel
     @State private var didSetupGameContext = false
-    @State private var selectedTab: AppTab = .setup
 
-
-    init() {
+    init(navigation: AppNavigationModel = AppNavigationModel()) {
+        _navigation = ObservedObject(wrappedValue: navigation)
         let sharedDeckSettings = DeckSettings()
         let gameViewModel = CardGameViewModel(deckSettings: sharedDeckSettings)
         _setupViewModel = State(initialValue: SetupViewModel(deckSettings: sharedDeckSettings))
@@ -33,7 +26,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $navigation.selectedTab) {
             SetupView(viewModel: setupViewModel, onApply: {
                 gameViewModel.resetDeck()
             })
@@ -76,15 +69,15 @@ struct ContentView: View {
         .tint(.orange)
         .onAppear {
             guard !didSetupGameContext else {
-                touchBarViewModel.setPlayTabVisible(selectedTab == .play)
+                touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
                 return
             }
 
             gameViewModel.setupGame(context: modelContext)
             didSetupGameContext = true
-            touchBarViewModel.setPlayTabVisible(selectedTab == .play)
+            touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
         }
-        .onChange(of: selectedTab) { _, newValue in
+        .onChange(of: navigation.selectedTab) { _, newValue in
             touchBarViewModel.setPlayTabVisible(newValue == .play)
             if newValue == .play {
                 DispatchQueue.main.async {

@@ -8,6 +8,18 @@
 import SwiftUI
 import SwiftData
 import AppKit
+import Combine
+
+enum AppTab: Hashable {
+    case setup
+    case play
+    case history
+    case leaderboard
+}
+
+final class AppNavigationModel: ObservableObject {
+    @Published var selectedTab: AppTab = .setup
+}
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var observers: [NSObjectProtocol] = []
@@ -44,6 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct CardGameByMahuApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @StateObject private var appNavigation = AppNavigationModel()
 
     // TODO: Handle migration instead of deleting the store on schema incompatibility
     let container: ModelContainer = {
@@ -77,12 +90,35 @@ struct CardGameByMahuApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(navigation: appNavigation)
                 .frame(width: 400)
                 .frame(maxHeight: 900)
                 .frame(minHeight: 700)
         }
         .windowResizability(.contentSize)
         .modelContainer(container)
+        .commands {
+            CommandMenu("Tabs") {
+                Button("Setup") {
+                    appNavigation.selectedTab = .setup
+                }
+                .keyboardShortcut("1", modifiers: [.command])
+
+                Button("Play") {
+                    appNavigation.selectedTab = .play
+                }
+                .keyboardShortcut("2", modifiers: [.command])
+
+                Button("History") {
+                    appNavigation.selectedTab = .history
+                }
+                .keyboardShortcut("3", modifiers: [.command])
+
+                Button("Leaderboard") {
+                    appNavigation.selectedTab = .leaderboard
+                }
+                .keyboardShortcut("4", modifiers: [.command])
+            }
+        }
     }
 }

@@ -378,6 +378,6 @@ struct RuleItem: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(navigation: AppNavigationModel())
         .modelContainer(for: PlayingCard.self, inMemory: true)
 }
