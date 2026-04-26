@@ -232,6 +232,7 @@ struct GameView: View {
         }
         .onAppear {
             viewModel.setupGame(context: context)
+            syncTouchBar()
         }
         .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
@@ -325,6 +326,7 @@ struct GameView: View {
         // Midpoint: deal and complete flip to reveal
         DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
             viewModel.startRound()
+            syncTouchBar()
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 computerRotation = 180
             }
@@ -334,6 +336,26 @@ struct GameView: View {
     @State private var playerRotation: Double = 0
     @State private var computerRotation: Double = 0
     
+    private func syncTouchBar() {
+    #if os(macOS)
+        GameTouchBarController.shared.update(
+            mode: viewModel.waitingForGuess ? .guessOptions : .deal,
+            dealAction: {
+                startNewRound()
+            },
+            lowerAction: {
+                handleGuess(.lower)
+            },
+            equalAction: {
+                handleGuess(.equal)
+            },
+            higherAction: {
+                handleGuess(.higher)
+            }
+        )
+    #endif
+    }
+    
     private func handleGuess(_ guess: Guess) {
         // Animate to 90° (hide front), then swap content, then complete to 180°.
         withAnimation(.easeInOut(duration: phaseDuration)) {
@@ -341,6 +363,7 @@ struct GameView: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
             viewModel.makeGuess(guess) // swap to revealed card content here
+            syncTouchBar()
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 playerRotation = 180
             }
