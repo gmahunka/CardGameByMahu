@@ -10,6 +10,7 @@ import SwiftData
 
 struct HardcoreGameView: View {
     @Bindable var viewModel: CardGameViewModel
+    var touchBarViewModel: TouchBarViewModel? = nil
 
     var body: some View {
         ZStack {
@@ -52,7 +53,7 @@ struct HardcoreGameView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
 
-                GameView(viewModel: viewModel)
+                GameView(viewModel: viewModel, touchBarViewModel: touchBarViewModel)
             }
         }
     }

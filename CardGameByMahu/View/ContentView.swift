@@ -70,7 +70,7 @@ struct ContentView: View {
         }
         .tabViewStyle(.grouped)
         .sheet(isPresented: $gameViewModel.isHardcoreMode) {
-            HardcoreGameView(viewModel: gameViewModel)
+            HardcoreGameView(viewModel: gameViewModel, touchBarViewModel: touchBarViewModel)
                 .interactiveDismissDisabled(true)
         }
         .tint(.orange)
