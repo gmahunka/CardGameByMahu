@@ -1,3 +1,10 @@
+//
+//  TouchBarView.swift
+//  CardGameByMahu
+//
+//  Created by Gergo Mahunka on 2026. 04. 26..
+//
+
 #if os(macOS)
 
 import AppKit
@@ -18,6 +25,7 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
     private static let higherIdentifier = NSTouchBarItem.Identifier("com.cardgamebymahu.touchbar.higher")
 
     private weak var window: NSWindow?
+    private var isVisible = false
     private var mode: Mode = .deal
     private var dealAction: (() -> Void)?
     private var lowerAction: (() -> Void)?
@@ -25,12 +33,14 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
     private var higherAction: (() -> Void)?
 
     func update(
+        isVisible: Bool,
         mode: Mode,
-        dealAction: @escaping () -> Void,
-        lowerAction: @escaping () -> Void,
-        equalAction: @escaping () -> Void,
-        higherAction: @escaping () -> Void
+        dealAction: (() -> Void)?,
+        lowerAction: (() -> Void)?,
+        equalAction: (() -> Void)?,
+        higherAction: (() -> Void)?
     ) {
+        self.isVisible = isVisible
         self.mode = mode
         self.dealAction = dealAction
         self.lowerAction = lowerAction
@@ -47,10 +57,12 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
 
     private func refreshTouchBar() {
         guard let window else { return }
-        window.touchBar = makeTouchBar()
+        window.touchBar = isVisible ? makeTouchBar() : nil
     }
 
     private func makeTouchBar() -> NSTouchBar? {
+        guard isVisible else { return nil }
+
         let touchBar = NSTouchBar()
         touchBar.delegate = self
         touchBar.customizationIdentifier = NSTouchBar.CustomizationIdentifier("com.cardgamebymahu.touchbar")
@@ -78,9 +90,9 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
     private func buttonItem(title: String, symbolName: String, action: Selector) -> NSTouchBarItem {
         let identifier: NSTouchBarItem.Identifier
         switch title {
-        case "Deal": identifier = Self.dealIdentifier
-        case "Lower": identifier = Self.lowerIdentifier
-        case "Equal": identifier = Self.equalIdentifier
+        case "Touch Bar Deal": identifier = Self.dealIdentifier
+        case "Touch Bar Lower": identifier = Self.lowerIdentifier
+        case "Touch Bar Equal": identifier = Self.equalIdentifier
         default: identifier = Self.higherIdentifier
         }
 

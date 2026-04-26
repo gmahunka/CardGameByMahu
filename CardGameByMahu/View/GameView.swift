@@ -7,11 +7,13 @@
 
 import SwiftUI
 import SwiftData
+import AppKit
 
 struct GameView: View {
     
     @Environment(\.modelContext) private var context
     @Bindable var viewModel: CardGameViewModel
+    var onVisibilityChange: ((Bool) -> Void)? = nil
     @State private var showingRules = false
     @State private var showHardcoreOutOfCardsAlert = false
     
@@ -230,9 +232,9 @@ struct GameView: View {
                 }
             }
         }
+        .background(TouchBarVisibilityObserver(onVisibilityChange: onVisibilityChange))
         .onAppear {
             viewModel.setupGame(context: context)
-            syncTouchBar()
         }
         .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
@@ -326,7 +328,6 @@ struct GameView: View {
         // Midpoint: deal and complete flip to reveal
         DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
             viewModel.startRound()
-            syncTouchBar()
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 computerRotation = 180
             }
@@ -336,26 +337,6 @@ struct GameView: View {
     @State private var playerRotation: Double = 0
     @State private var computerRotation: Double = 0
     
-    private func syncTouchBar() {
-    #if os(macOS)
-        GameTouchBarController.shared.update(
-            mode: viewModel.waitingForGuess ? .guessOptions : .deal,
-            dealAction: {
-                startNewRound()
-            },
-            lowerAction: {
-                handleGuess(.lower)
-            },
-            equalAction: {
-                handleGuess(.equal)
-            },
-            higherAction: {
-                handleGuess(.higher)
-            }
-        )
-    #endif
-    }
-    
     private func handleGuess(_ guess: Guess) {
         // Animate to 90° (hide front), then swap content, then complete to 180°.
         withAnimation(.easeInOut(duration: phaseDuration)) {
@@ -363,10 +344,56 @@ struct GameView: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
             viewModel.makeGuess(guess) // swap to revealed card content here
-            syncTouchBar()
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 playerRotation = 180
             }
+        }
+    }
+}
+
+private struct TouchBarVisibilityObserver: NSViewRepresentable {
+    let onVisibilityChange: ((Bool) -> Void)?
+
+    func makeNSView(context: Context) -> VisibilityTrackingView {
+        let view = VisibilityTrackingView()
+        view.onVisibilityChange = onVisibilityChange
+        return view
+    }
+
+    func updateNSView(_ nsView: VisibilityTrackingView, context: Context) {
+        nsView.onVisibilityChange = onVisibilityChange
+        nsView.reportVisibility()
+    }
+
+    final class VisibilityTrackingView: NSView {
+        var onVisibilityChange: ((Bool) -> Void)?
+        private var lastVisibleState: Bool?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            reportVisibility()
+        }
+
+        override func viewDidHide() {
+            super.viewDidHide()
+            reportVisibility()
+        }
+
+        override func viewDidUnhide() {
+            super.viewDidUnhide()
+            reportVisibility()
+        }
+
+        override func layout() {
+            super.layout()
+            reportVisibility()
+        }
+
+        func reportVisibility() {
+            let isVisible = window != nil && !isHiddenOrHasHiddenAncestor
+            guard lastVisibleState != isVisible else { return }
+            lastVisibleState = isVisible
+            onVisibilityChange?(isVisible)
         }
     }
 }
