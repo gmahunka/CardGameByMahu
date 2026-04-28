@@ -15,6 +15,8 @@ struct GameView: View {
     var touchBarViewModel: TouchBarViewModel? = nil
     @State private var showingRules = false
     @State private var showHardcoreOutOfCardsAlert = false
+    @State private var voiceService = VoiceCommandService()
+    @State private var voiceFeedbackMessage: String?
     
     var body: some View {
         
@@ -52,6 +54,22 @@ struct GameView: View {
                     
                     HStack {
                         Spacer()
+                        Button {
+                            voiceService.toggle { command in
+                                handleVoiceCommand(command)
+                            }
+                            showVoiceMessage(voiceService.statusMessage)
+                        } label: {
+                            Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
+                                .font(.title2)
+                                .foregroundColor(voiceService.isVoiceModeEnabled ? .orange : .white.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 12)
+                        .accessibilityIdentifier("voiceCommandToggle")
+                        .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
+                        .padding(.top, 12)
+
                         // Info Button
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
@@ -240,7 +258,11 @@ struct GameView: View {
             touchBarViewModel?.refresh()
         }
         .onDisappear {
+            voiceService.disable()
             touchBarViewModel?.setActionHandlers(deal: nil, guess: nil)
+        }
+        .onChange(of: voiceService.statusMessage) { _, newValue in
+            showVoiceMessage(newValue)
         }
         .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {
@@ -302,6 +324,20 @@ struct GameView: View {
                 }
             }
         }
+        .overlay(alignment: .top) {
+            if let voiceFeedbackMessage {
+                Text(voiceFeedbackMessage)
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.black.opacity(0.7))
+                    .clipShape(Capsule())
+                    .padding(.top, 8)
+                    .transition(.opacity)
+                    .accessibilityIdentifier("voiceCommandFeedback")
+            }
+        }
     }
     
     @State private var isFirstPassed = false
@@ -352,6 +388,62 @@ struct GameView: View {
             viewModel.makeGuess(guess) // swap to revealed card content here
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 playerRotation = 180
+            }
+        }
+    }
+
+    private func handleVoiceCommand(_ command: VoiceCommand) {
+        switch command {
+        case .deal:
+            guard !viewModel.waitingForGuess else {
+                showVoiceMessage("Say lower, equal, or higher.")
+                return
+            }
+
+            if viewModel.remainingCards < 2 {
+                if viewModel.isHardcoreMode {
+                    showHardcoreOutOfCardsAlert = true
+                } else {
+                    viewModel.showReshuffleAlert = true
+                }
+                return
+            }
+
+            startNewRound()
+
+        case .lower:
+            guard viewModel.waitingForGuess else {
+                showVoiceMessage("Say deal to start a round.")
+                return
+            }
+            handleGuess(.lower)
+
+        case .equal:
+            guard viewModel.waitingForGuess else {
+                showVoiceMessage("Say deal to start a round.")
+                return
+            }
+            handleGuess(.equal)
+
+        case .higher:
+            guard viewModel.waitingForGuess else {
+                showVoiceMessage("Say deal to start a round.")
+                return
+            }
+            handleGuess(.higher)
+        }
+    }
+
+    private func showVoiceMessage(_ message: String?) {
+        guard let message else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            voiceFeedbackMessage = message
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            guard voiceFeedbackMessage == message else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                voiceFeedbackMessage = nil
             }
         }
     }
