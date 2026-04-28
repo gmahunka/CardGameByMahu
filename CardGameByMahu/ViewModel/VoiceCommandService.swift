@@ -107,6 +107,8 @@ final class VoiceCommandService {
         isVoiceModeEnabled = false
         isListening = false
         stopRecognitionSession()
+        onCommand = nil
+        parser = VoiceCommandParser()
         statusMessage = "Voice commands disabled."
     }
 
