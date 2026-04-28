@@ -52,4 +52,78 @@ struct VoiceCommandParserTests {
         #expect(second == nil)
         #expect(third == .deal)
     }
+
+    @Test
+    mutating func parser_handlesMixedCaseAndPunctuation() {
+        var sut = VoiceCommandParser(cooldown: 0)
+
+        let command = sut.nextCommand(from: "DeAl, please!")
+
+        #expect(command == .deal)
+    }
+
+    @Test
+    mutating func parser_ignoresPartialWordMatches() {
+        var sut = VoiceCommandParser(cooldown: 0)
+
+        let command = sut.nextCommand(from: "dealer, lowering, equality, highered")
+
+        #expect(command == nil)
+    }
+
+    @Test
+    mutating func parser_allowsCommandAtCooldownBoundary() {
+        var sut = VoiceCommandParser(cooldown: 0.7)
+        let now = Date(timeIntervalSinceReferenceDate: 100)
+
+        let first = sut.nextCommand(from: "deal", now: now)
+        let second = sut.nextCommand(from: "deal", now: now.addingTimeInterval(0.7))
+
+        #expect(first == .deal)
+        #expect(second == .deal)
+    }
+}
+
+@MainActor
+struct VoiceCommandServiceTests {
+
+    @Test
+    func service_enableInUITestingSetsExpectedState() {
+        let sut = VoiceCommandService(isUITesting: true)
+        var receivedCommand: VoiceCommand?
+
+        sut.enable { receivedCommand = $0 }
+
+        #expect(sut.isVoiceModeEnabled)
+        #expect(sut.isListening)
+        #expect(sut.statusMessage == "Voice commands enabled.")
+        #expect(receivedCommand == nil)
+    }
+
+    @Test
+    func service_disableAfterUITestingEnableClearsState() {
+        let sut = VoiceCommandService(isUITesting: true)
+        sut.enable { _ in }
+
+        sut.disable()
+
+        #expect(!sut.isVoiceModeEnabled)
+        #expect(!sut.isListening)
+        #expect(sut.statusMessage == "Voice commands disabled.")
+    }
+
+    @Test
+    func service_toggleInUITestingSwitchesEnabledState() {
+        let sut = VoiceCommandService(isUITesting: true)
+        var commands: [VoiceCommand] = []
+
+        sut.toggle { commands.append($0) }
+        #expect(sut.isVoiceModeEnabled)
+        #expect(sut.isListening)
+
+        sut.toggle { commands.append($0) }
+        #expect(!sut.isVoiceModeEnabled)
+        #expect(!sut.isListening)
+        #expect(commands.isEmpty)
+    }
 }
