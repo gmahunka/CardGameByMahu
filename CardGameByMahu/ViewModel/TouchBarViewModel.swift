@@ -8,11 +8,24 @@
 import Foundation
 import Observation
 
+// Protocol abstraction to allow injecting a mock controller in tests
+protocol GameTouchBarControlling {
+    func update(
+        isVisible: Bool,
+        mode: GameTouchBarController.Mode,
+        dealAction: (() -> Void)?,
+        lowerAction: (() -> Void)?,
+        equalAction: (() -> Void)?,
+        higherAction: (() -> Void)?
+    )
+}
+
 @MainActor
 @Observable
 final class TouchBarViewModel {
     private weak var gameViewModel: CardGameViewModel?
-    private let controller: GameTouchBarController
+    // Use a protocol for the controller so tests can inject a mock
+    private let controller: GameTouchBarControlling
     private var dealHandler: (() -> Void)?
     private var guessHandler: ((Guess) -> Void)?
 
@@ -23,11 +36,12 @@ final class TouchBarViewModel {
     init(
         gameViewModel: CardGameViewModel,
         isPlayTabVisible: Bool = false,
-        controller: GameTouchBarController? = nil
+        controller: GameTouchBarControlling? = nil
     ) {
         self.gameViewModel = gameViewModel
         self.isPlayTabVisible = isPlayTabVisible
-        self.controller = controller ?? .shared
+        // default to the shared real controller
+        self.controller = controller ?? GameTouchBarController.shared
         refresh()
     }
 
@@ -99,3 +113,11 @@ final class TouchBarViewModel {
         )
     }
 }
+
+#if os(macOS)
+import AppKit
+
+// Make the concrete GameTouchBarController conform to the protocol
+extension GameTouchBarController: GameTouchBarControlling {}
+#endif
+

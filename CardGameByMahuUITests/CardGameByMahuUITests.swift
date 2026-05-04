@@ -206,14 +206,26 @@ final class CardGameByMahuUITests: XCTestCase {
         app.buttons["confirmDeleteEntryButton"].firstMatch.click()
     }
     
-    func testSome() {
+    func testVoiceCommandToggle() {
         let app = XCUIApplication()
-        app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
-        app.buttons.matching(identifier: "deleteLeaderboardEntrybutton").element(boundBy: 6).click()
-        app/*@START_MENU_TOKEN@*/.buttons["cancelDeleteEntryButton"]/*[[".sheets[\"_NS:87\"].buttons",".sheets",".buttons[\"Cancel\"]",".buttons[\"cancelDeleteEntryButton\"]"],[[[-1,3],[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
-   
+        app.launchArguments.append("-uitesting")  // Enable UI testing mode with stubbed voice service
+        app.launch()
         
+        app.tabs["playTab"].firstMatch.click()
+        
+        let voiceToggle = app.buttons["voiceCommandToggle"]
+        XCTAssertTrue(voiceToggle.exists, "Voice command toggle button should exist on play tab.")
+        
+        // Initial state should be "Enable Voice Commands" (disabled)
+        XCTAssertEqual(voiceToggle.label, "Enable Voice Commands", "Voice commands should initially be disabled.")
+        
+        // Toggle ON
+        voiceToggle.click()
+        XCTAssertEqual(voiceToggle.label, "Disable Voice Commands", "After clicking, voice commands should be enabled.")
+        
+        // Toggle OFF
+        voiceToggle.click()
+        XCTAssertEqual(voiceToggle.label, "Enable Voice Commands", "After clicking again, voice commands should be disabled.")
     }
 }
 
