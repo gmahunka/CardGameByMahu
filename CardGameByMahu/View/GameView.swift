@@ -106,8 +106,8 @@ struct GameView: View {
                             )
                             .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 12, x: 0, y: 4)
                     )
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
                     
                     Image("emeles")
                         .resizable()
@@ -137,7 +137,8 @@ struct GameView: View {
                             .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.10, cornerRadius: 12, fillsWidth: false))
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 30)
+                    .padding(.vertical, 14)
                     
                     HStack(spacing: 12) {
                         Spacer()
@@ -150,7 +151,7 @@ struct GameView: View {
                         Spacer()
                     }
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 16)
                     
                     if viewModel.waitingForGuess {
                         HStack(spacing: 8) {
@@ -179,6 +180,7 @@ struct GameView: View {
                             .keyboardShortcut(.rightArrow, modifiers: [])
                         }
                         .padding(.horizontal, 16)
+                        .padding(.vertical, 18)
                     } else {
                         Button {
                             if viewModel.remainingCards < 2 {
@@ -199,6 +201,7 @@ struct GameView: View {
                         .accessibilityLabel("Deal")
                         .keyboardShortcut(.space, modifiers: [])
                         .padding(.horizontal, 16)
+                        .padding(.vertical, 18)
                     }
                     
                     HStack(spacing: 12) {
