@@ -276,8 +276,9 @@ struct GameView: View {
                             .accessibilityIdentifier("showRulesButton")
                         }
                     }
+                    .frame(minHeight: 88)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 10)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color.white.opacity(0.04))
@@ -298,7 +299,7 @@ struct GameView: View {
                             .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 12, x: 0, y: 4)
                     )
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 12)
                     
                     Image("emeles")
                         .resizable()
@@ -329,7 +330,7 @@ struct GameView: View {
                         }
                     }
                     .padding(.horizontal, 30)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 10)
                     
                     HStack(spacing: 12) {
                         Spacer()
@@ -342,7 +343,7 @@ struct GameView: View {
                         Spacer()
                     }
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, 12)
                     
                     if viewModel.waitingForGuess {
                         HStack(spacing: 8) {
@@ -371,7 +372,7 @@ struct GameView: View {
                             .keyboardShortcut(.rightArrow, modifiers: [])
                         }
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 18)
+                        .padding(.vertical, 12)
                     } else {
                         Button {
                             if viewModel.remainingCards < 2 {
