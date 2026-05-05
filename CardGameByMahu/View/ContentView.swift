@@ -62,10 +62,6 @@ struct ContentView: View {
                 .tag(AppTab.leaderboard)
         }
         .tabViewStyle(.grouped)
-        .sheet(isPresented: $gameViewModel.isHardcoreMode) {
-            HardcoreGameView(viewModel: gameViewModel, touchBarViewModel: touchBarViewModel)
-                .interactiveDismissDisabled(true)
-        }
         .tint(CyberpunkTheme.cyan)
         .onAppear {
             guard !didSetupGameContext else {

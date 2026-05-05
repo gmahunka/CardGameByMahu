@@ -17,6 +17,144 @@ struct GameView: View {
     @State private var showHardcoreOutOfCardsAlert = false
     @State private var voiceService = VoiceCommandService()
     @State private var voiceFeedbackMessage: String?
+
+    @State private var isFirstPassed = false
+    let phaseDuration = 0.3
+
+    @State private var playerRotation: Double = 0
+    @State private var computerRotation: Double = 0
+
+    private func cardStack(imageName: String, rotation: Double, accent: Color) -> some View {
+        ZStack {
+            Image("back")
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 128)
+                .opacity(rotation < 90 ? 1 : 0)
+                .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                .shadow(color: accent.opacity(0.4), radius: 16)
+
+            Image(imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 128)
+                .opacity(rotation >= 90 ? 1 : 0)
+                .rotation3DEffect(.degrees(rotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                .shadow(color: accent.opacity(0.45), radius: 18)
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(accent.opacity(0.55), lineWidth: 1.2)
+                )
+                .shadow(color: accent.opacity(0.18), radius: 18)
+        )
+    }
+
+    private func startNewRound() {
+        // If computer is currently showing its back (180°), normalize to 0 first
+        if computerRotation >= 179 { // tolerate precision
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                computerRotation = 0
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
+                proceedDeal(with: phaseDuration)
+            }
+        } else {
+            proceedDeal(with: phaseDuration)
+        }
+    }
+
+    private func proceedDeal(with phaseDuration: Double) {
+        // Flip computer to 90° (hide front)
+        withAnimation(.easeInOut(duration: phaseDuration)) {
+            computerRotation = 90
+            if isFirstPassed {
+                // Ensure player's card is reset to front for new round
+                playerRotation = 0
+            }
+            isFirstPassed = true
+        }
+        // Midpoint: deal and complete flip to reveal
+        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
+            viewModel.startRound()
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                computerRotation = 180
+            }
+        }
+    }
+
+    private func handleGuess(_ guess: Guess) {
+        // Animate to 90° (hide front), then swap content, then complete to 180°.
+        withAnimation(.easeInOut(duration: phaseDuration)) {
+            playerRotation = 90
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
+            viewModel.makeGuess(guess) // swap to revealed card content here
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                playerRotation = 180
+            }
+        }
+    }
+
+    private func handleVoiceCommand(_ command: VoiceCommand) {
+        switch command {
+        case .deal:
+            guard !viewModel.waitingForGuess else {
+                showVoiceMessage("Say lower, equal, or higher.")
+                return
+            }
+
+            if viewModel.remainingCards < 2 {
+                if viewModel.isHardcoreMode {
+                    showHardcoreOutOfCardsAlert = true
+                } else {
+                    viewModel.showReshuffleAlert = true
+                }
+                return
+            }
+
+            startNewRound()
+
+        case .lower:
+            guard viewModel.waitingForGuess else {
+                showVoiceMessage("Say deal to start a round.")
+                return
+            }
+            handleGuess(.lower)
+
+        case .equal:
+            guard viewModel.waitingForGuess else {
+                showVoiceMessage("Say deal to start a round.")
+                return
+            }
+            handleGuess(.equal)
+
+        case .higher:
+            guard viewModel.waitingForGuess else {
+                showVoiceMessage("Say deal to start a round.")
+                return
+            }
+            handleGuess(.higher)
+        }
+    }
+
+    private func showVoiceMessage(_ message: String?) {
+        guard let message else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            voiceFeedbackMessage = message
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            guard voiceFeedbackMessage == message else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                voiceFeedbackMessage = nil
+            }
+        }
+    }
     
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -33,8 +171,61 @@ struct GameView: View {
                 VStack(spacing: 0) {
                     // Unified Header Bar
                     HStack(spacing: 0) {
-                        // Hardcore Mode Button
-                        if !viewModel.isHardcoreMode {
+                        // Unified Header Bar
+                        if viewModel.isHardcoreMode {
+                            Button {
+                                viewModel.quitHardcoreMode()
+                            } label: {
+                                VStack(spacing: 2) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    Text("Quit")
+                                        .font(.caption2.weight(.semibold))
+                                }
+                                .frame(height: 44)
+                            }
+                            .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
+                            .accessibilityIdentifier("quitHardcoreButton")
+                            
+                            Spacer()
+                            
+                            // Voice Toggle Button (still available during Hardcore)
+                            Button {
+                                voiceService.toggle { command in
+                                    handleVoiceCommand(command)
+                                }
+                                showVoiceMessage(voiceService.statusMessage)
+                            } label: {
+                                VStack(spacing: 2) {
+                                    Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    Text("Voice")
+                                        .font(.caption2.weight(.semibold))
+                                }
+                                .frame(height: 44)
+                            }
+                            .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
+                            .accessibilityIdentifier("voiceCommandToggle")
+                            .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("Hardcore Mode")
+                                    .font(.headline.weight(.bold))
+                                    .foregroundStyle(CyberpunkTheme.magenta)
+                                Text(String(format: "Time: %.1fs", viewModel.hardcoreElapsedTime))
+                                    .font(.title3.bold())
+                                    .monospacedDigit()
+                                    .foregroundStyle(CyberpunkTheme.textPrimary)
+                                Text(String(format: "Optimal guesses: %.1f%%", viewModel.hardcoreAccuracyPercent))
+                                    .font(.caption)
+                                    .foregroundStyle(CyberpunkTheme.textSecondary)
+                            }
+                            .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.08)
+                        } else {
+                            // Normal header controls
+                            // Hardcore Mode Button
                             Button {
                                 viewModel.isHardcoreMode = true
                             } label: {
@@ -47,43 +238,43 @@ struct GameView: View {
                                 .frame(height: 44)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
-                        }
-                        
-                        Spacer()
-                        
-                        // Voice Toggle Button
-                        Button {
-                            voiceService.toggle { command in
-                                handleVoiceCommand(command)
+                            
+                            Spacer()
+                            
+                            // Voice Toggle Button
+                            Button {
+                                voiceService.toggle { command in
+                                    handleVoiceCommand(command)
+                                }
+                                showVoiceMessage(voiceService.statusMessage)
+                            } label: {
+                                VStack(spacing: 2) {
+                                    Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    Text("Voice")
+                                        .font(.caption2.weight(.semibold))
+                                }
+                                .frame(height: 44)
                             }
-                            showVoiceMessage(voiceService.statusMessage)
-                        } label: {
-                            VStack(spacing: 2) {
-                                Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
-                                    .font(.system(size: 16, weight: .semibold))
-                                Text("Voice")
-                                    .font(.caption2.weight(.semibold))
+                            .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
+                            .accessibilityIdentifier("voiceCommandToggle")
+                            .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
+                            
+                            Spacer()
+                            
+                            // Info Button
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showingRules = true
+                                }
+                            } label: {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .frame(width: 44, height: 44)
                             }
-                            .frame(height: 44)
+                            .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isIconOnly: true))
+                            .accessibilityIdentifier("showRulesButton")
                         }
-                        .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
-                        .accessibilityIdentifier("voiceCommandToggle")
-                        .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
-                        
-                        Spacer()
-                        
-                        // Info Button
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showingRules = true
-                            }
-                        } label: {
-                            Image(systemName: "info.circle.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .frame(width: 44, height: 44)
-                        }
-                        .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isIconOnly: true))
-                        .accessibilityIdentifier("showRulesButton")
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -333,145 +524,10 @@ struct GameView: View {
                     .accessibilityIdentifier("voiceCommandFeedback")
             }
         }
+
     }
 
-    private func cardStack(imageName: String, rotation: Double, accent: Color) -> some View {
-        ZStack {
-            Image("back")
-                .resizable()
-                .scaledToFit()
-                .frame(maxHeight: 128)
-                .opacity(rotation < 90 ? 1 : 0)
-                .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                .shadow(color: accent.opacity(0.4), radius: 16)
 
-            Image(imageName)
-                .resizable()
-                .scaledToFit()
-                .frame(maxHeight: 128)
-                .opacity(rotation >= 90 ? 1 : 0)
-                .rotation3DEffect(.degrees(rotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                .shadow(color: accent.opacity(0.45), radius: 18)
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.04))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(accent.opacity(0.55), lineWidth: 1.2)
-                )
-                .shadow(color: accent.opacity(0.18), radius: 18)
-        )
-    }
-    
-    @State private var isFirstPassed = false
-    let phaseDuration = 0.3
-    
-    private func startNewRound() {
-        // If computer is currently showing its back (180°), normalize to 0 first
-        if computerRotation >= 179 { // tolerate precision
-            withAnimation(.easeInOut(duration: phaseDuration)) {
-                computerRotation = 0
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
-                proceedDeal(with: phaseDuration)
-            }
-        } else {
-            proceedDeal(with: phaseDuration)
-        }
-    }
-    
-    private func proceedDeal(with phaseDuration: Double) {
-        // Flip computer to 90° (hide front)
-        withAnimation(.easeInOut(duration: phaseDuration)) {
-            computerRotation = 90
-            if isFirstPassed {
-                // Ensure player's card is reset to front for new round
-                playerRotation = 0
-            }
-            isFirstPassed = true
-        }
-        // Midpoint: deal and complete flip to reveal
-        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
-            viewModel.startRound()
-            withAnimation(.easeInOut(duration: phaseDuration)) {
-                computerRotation = 180
-            }
-        }
-    }
-    
-    @State private var playerRotation: Double = 0
-    @State private var computerRotation: Double = 0
-    
-    private func handleGuess(_ guess: Guess) {
-        // Animate to 90° (hide front), then swap content, then complete to 180°.
-        withAnimation(.easeInOut(duration: phaseDuration)) {
-            playerRotation = 90
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
-            viewModel.makeGuess(guess) // swap to revealed card content here
-            withAnimation(.easeInOut(duration: phaseDuration)) {
-                playerRotation = 180
-            }
-        }
-    }
-
-    private func handleVoiceCommand(_ command: VoiceCommand) {
-        switch command {
-        case .deal:
-            guard !viewModel.waitingForGuess else {
-                showVoiceMessage("Say lower, equal, or higher.")
-                return
-            }
-
-            if viewModel.remainingCards < 2 {
-                if viewModel.isHardcoreMode {
-                    showHardcoreOutOfCardsAlert = true
-                } else {
-                    viewModel.showReshuffleAlert = true
-                }
-                return
-            }
-
-            startNewRound()
-
-        case .lower:
-            guard viewModel.waitingForGuess else {
-                showVoiceMessage("Say deal to start a round.")
-                return
-            }
-            handleGuess(.lower)
-
-        case .equal:
-            guard viewModel.waitingForGuess else {
-                showVoiceMessage("Say deal to start a round.")
-                return
-            }
-            handleGuess(.equal)
-
-        case .higher:
-            guard viewModel.waitingForGuess else {
-                showVoiceMessage("Say deal to start a round.")
-                return
-            }
-            handleGuess(.higher)
-        }
-    }
-
-    private func showVoiceMessage(_ message: String?) {
-        guard let message else { return }
-        withAnimation(.easeInOut(duration: 0.2)) {
-            voiceFeedbackMessage = message
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            guard voiceFeedbackMessage == message else { return }
-            withAnimation(.easeInOut(duration: 0.2)) {
-                voiceFeedbackMessage = nil
-            }
-        }
-    }
 }
 
 // Helper View for wrapping text
