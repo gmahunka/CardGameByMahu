@@ -22,18 +22,6 @@ struct GameView: View {
         ZStack(alignment: .topLeading) {
             CyberBackdrop()
             
-            if !viewModel.isHardcoreMode {
-                Button {
-                    viewModel.isHardcoreMode = true
-                } label: {
-                    Label("Hardcore Mode", systemImage: "flame.fill")
-                }
-                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: false))
-                .padding(.top, 20)
-                .padding(.leading, 20)
-                .zIndex(2)
-            }
-            
             LinearGradient(
                 colors: [Color.black.opacity(0.02),
                          Color.black.opacity(0.18)],
@@ -42,36 +30,84 @@ struct GameView: View {
             )
             .ignoresSafeArea()
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 16) {
-                    
-                    HStack {
+                VStack(spacing: 0) {
+                    // Unified Header Bar
+                    HStack(spacing: 0) {
+                        // Hardcore Mode Button
+                        if !viewModel.isHardcoreMode {
+                            Button {
+                                viewModel.isHardcoreMode = true
+                            } label: {
+                                VStack(spacing: 2) {
+                                    Image(systemName: "flame.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    Text("Hardcore")
+                                        .font(.caption2.weight(.semibold))
+                                }
+                                .frame(height: 44)
+                            }
+                            .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
+                        }
+                        
                         Spacer()
+                        
+                        // Voice Toggle Button
                         Button {
                             voiceService.toggle { command in
                                 handleVoiceCommand(command)
                             }
                             showVoiceMessage(voiceService.statusMessage)
                         } label: {
-                            Label(voiceService.isVoiceModeEnabled ? "Voice On" : "Voice Off", systemImage: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
+                            VStack(spacing: 2) {
+                                Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text("Voice")
+                                    .font(.caption2.weight(.semibold))
+                            }
+                            .frame(height: 44)
                         }
-                        .buttonStyle(NeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke, fillOpacity: 0.08, cornerRadius: 12, fillsWidth: false))
-                        .padding(.trailing, 12)
+                        .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
                         .accessibilityIdentifier("voiceCommandToggle")
                         .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
-                        .padding(.top, 12)
-
+                        
+                        Spacer()
+                        
+                        // Info Button
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 showingRules = true
                             }
                         } label: {
-                            Label("Rules", systemImage: "info.circle.fill")
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(width: 44, height: 44)
                         }
-                        .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.08, cornerRadius: 12, fillsWidth: false))
-                        .padding(.trailing, 12)
+                        .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isIconOnly: true))
                         .accessibilityIdentifier("showRulesButton")
-                        .padding(.top, 12)
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.04))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                CyberpunkTheme.cyan.opacity(0.4),
+                                                CyberpunkTheme.magenta.opacity(0.3)
+                                            ]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1.2
+                                    )
+                            )
+                            .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 12, x: 0, y: 4)
+                    )
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 12)
                     
                     Image("emeles")
                         .resizable()
