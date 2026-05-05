@@ -14,11 +14,14 @@ struct HardcoreGameView: View {
 
     var body: some View {
         ZStack {
-            Color(nsColor: .lightGray)
-                .ignoresSafeArea()
+            CyberBackdrop()
 
-            Color.black.opacity(0.15)
-                .ignoresSafeArea()
+            LinearGradient(
+                colors: [CyberpunkTheme.magenta.opacity(0.10), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
             VStack {
                 HStack {
@@ -26,29 +29,25 @@ struct HardcoreGameView: View {
                         viewModel.quitHardcoreMode()
                     } label: {
                         Label("Quit", systemImage: "xmark.circle.fill")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.red.opacity(0.75))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
+                    .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.16, cornerRadius: 12))
                     .accessibilityIdentifier("quitHardcoreButton")
 
                     Spacer()
 
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Hardcore Mode")
-                            .font(.headline)
-                            .foregroundStyle(.white)
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(CyberpunkTheme.magenta)
                         Text(String(format: "Time: %.1fs", viewModel.hardcoreElapsedTime))
                             .font(.title3.bold())
                             .monospacedDigit()
-                            .foregroundStyle(.white)
+                            .foregroundStyle(CyberpunkTheme.textPrimary)
                         Text(String(format: "Optimal guesses: %.1f%%", viewModel.hardcoreAccuracyPercent))
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyle(CyberpunkTheme.textSecondary)
                     }
+                    .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.08)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)

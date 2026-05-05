@@ -19,38 +19,30 @@ struct GameView: View {
     @State private var voiceFeedbackMessage: String?
     
     var body: some View {
-        
         ZStack(alignment: .topLeading) {
-            Color(nsColor: .gray)
-                .ignoresSafeArea()
+            CyberBackdrop()
             
             if !viewModel.isHardcoreMode {
                 Button {
                     viewModel.isHardcoreMode = true
                 } label: {
                     Label("Hardcore Mode", systemImage: "flame.fill")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.red.opacity(0.8))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
+                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: false))
                 .padding(.top, 20)
                 .padding(.leading, 20)
                 .zIndex(2)
             }
             
-            // Subtle global tint for UI readability
             LinearGradient(
-                colors: [Color.black.opacity(0.08),
+                colors: [Color.black.opacity(0.02),
                          Color.black.opacity(0.18)],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     
                     HStack {
                         Spacer()
@@ -60,145 +52,94 @@ struct GameView: View {
                             }
                             showVoiceMessage(voiceService.statusMessage)
                         } label: {
-                            Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
-                                .font(.title2)
-                                .foregroundColor(voiceService.isVoiceModeEnabled ? .orange : .white.opacity(0.8))
+                            Label(voiceService.isVoiceModeEnabled ? "Voice On" : "Voice Off", systemImage: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(NeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke, fillOpacity: 0.08, cornerRadius: 12, fillsWidth: false))
                         .padding(.trailing, 12)
                         .accessibilityIdentifier("voiceCommandToggle")
                         .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
                         .padding(.top, 12)
 
-                        // Info Button
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 showingRules = true
                             }
                         } label: {
-                            Image(systemName: "info.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.white.opacity(0.8))
+                            Label("Rules", systemImage: "info.circle.fill")
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.08, cornerRadius: 12, fillsWidth: false))
                         .padding(.trailing, 12)
                         .accessibilityIdentifier("showRulesButton")
                         .padding(.top, 12)
                     }
                     
-                    // Logo
                     Image("emeles")
                         .resizable()
                         .scaledToFit()
                         .frame(maxHeight: 100)
+                        .shadow(color: CyberpunkTheme.cyan.opacity(0.28), radius: 16)
                     
-                    HStack(spacing: 8) {
-                        Text("Cards: \(viewModel.remainingCards)")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Cards Remaining")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(CyberpunkTheme.textSecondary)
+                            Text("\(viewModel.remainingCards)")
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(CyberpunkTheme.cyan)
+                        }
+                        .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06)
+
                         if !viewModel.isHardcoreMode {
                             Spacer()
                             Button {
                                 viewModel.resetDeck()
                             } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                    Text("Reshuffle")
-                                }
-                                .font(.caption.bold())
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 6)
-                                .background(Color.orange.opacity(0.8))
-                                .cornerRadius(6)
+                                Label("Reshuffle", systemImage: "arrow.triangle.2.circlepath")
                             }
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.10, cornerRadius: 12, fillsWidth: false))
                         }
                     }
                     .padding(.horizontal, 16)
                     
-                    // Cards
                     HStack(spacing: 12) {
                         Spacer()
-                        // Player Card
-                        ZStack {
-                            Image("back")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 120)
-                                .opacity(playerRotation < 90 ? 1 : 0)
-                                .rotation3DEffect(.degrees(playerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                            
-                            Image(viewModel.playerCard)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 120)
-                                .opacity(playerRotation >= 90 ? 1 : 0)
-                                .rotation3DEffect(.degrees(playerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                        }
+                        cardStack(imageName: viewModel.playerCard, rotation: playerRotation, accent: CyberpunkTheme.cyan)
                         
                         Spacer()
-                        
-                        // Computer Card
-                        ZStack {
-                            Image("back")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 120)
-                                .opacity(computerRotation < 90 ? 1 : 0)
-                                .rotation3DEffect(.degrees(computerRotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                            
-                            Image(viewModel.computerCard)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 120)
-                                .opacity(computerRotation >= 90 ? 1 : 0)
-                                .rotation3DEffect(.degrees(computerRotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                        }
+
+                        cardStack(imageName: viewModel.computerCard, rotation: computerRotation, accent: CyberpunkTheme.magenta)
                         
                         Spacer()
                     }
                     .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
                     
-                    // Button section
                     if viewModel.waitingForGuess {
                         HStack(spacing: 8) {
                             Button {
                                 handleGuess(.lower)
                             } label: {
-                                Text("Lower")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 40)
-                                    .background(Color.blue)
-                                    .cornerRadius(8)
+                                Text("LOWER")
                             }
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true))
                             .keyboardShortcut(.leftArrow, modifiers: [])
                             
                             Button {
                                 handleGuess(.equal)
                             } label: {
-                                Text("Equal")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 40)
-                                    .background(Color.green)
-                                    .cornerRadius(8)
+                                Text("EQUAL")
                             }
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.11, cornerRadius: 12, fillsWidth: true))
                             .keyboardShortcut(.downArrow, modifiers: [])
                             
                             Button {
                                 handleGuess(.higher)
                             } label: {
-                                Text("Higher")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 40)
-                                    .background(Color.red)
-                                    .cornerRadius(8)
+                                Text("HIGHER")
                             }
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true))
                             .keyboardShortcut(.rightArrow, modifiers: [])
                         }
                         .padding(.horizontal, 16)
@@ -215,38 +156,46 @@ struct GameView: View {
                                 startNewRound()
                             }
                         } label: {
-                            Image("button")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 44)
+                            Label("DEAL", systemImage: "bolt.fill")
                         }
+                        .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.16, cornerRadius: 16, fillsWidth: true))
                         .accessibilityIdentifier("dealButton")
                         .accessibilityLabel("Deal")
                         .keyboardShortcut(.space, modifiers: [])
+                        .padding(.horizontal, 16)
                     }
                     
-                    HStack(spacing: 16) {
-                        VStack(spacing: 4) {
+                    HStack(spacing: 12) {
+                        VStack(spacing: 6) {
                             Text("Player")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.8))
-                            Text(String(viewModel.playerScore))
-                                .font(.title2.bold())
-                                .foregroundColor(.white)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(CyberpunkTheme.textSecondary)
+                            Text("\(viewModel.playerScore)")
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(CyberpunkTheme.cyan)
                         }
+                        .frame(maxWidth: .infinity)
+                        .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06)
+
                         Spacer()
-                        VStack(spacing: 4) {
+
+                        VStack(spacing: 6) {
                             Text("Computer")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.8))
-                            Text(String(viewModel.computerScore))
-                                .font(.title2.bold())
-                                .foregroundColor(.white)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(CyberpunkTheme.textSecondary)
+                            Text("\(viewModel.computerScore)")
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(CyberpunkTheme.magenta)
                         }
+                        .frame(maxWidth: .infinity)
+                        .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.06)
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.bottom, 8)
                 }
+                .padding(.vertical, 12)
             }
         }
         .onAppear {
@@ -288,17 +237,16 @@ struct GameView: View {
         .overlay {
             if showingRules {
                 ZStack {
-                    // Full screen shading
-                    Color.black.opacity(0.6)
+                    Color.black.opacity(0.72)
                         .ignoresSafeArea()
                         .onTapGesture {
                             withAnimation { showingRules = false }
                         }
                     
-                    // Rules Card
                     VStack(spacing: 20) {
                         Text("Game Rules")
-                            .font(.title).bold()
+                            .font(.title.weight(.heavy))
+                            .foregroundStyle(CyberpunkTheme.cyan)
                         
                         VStack(alignment: .leading, spacing: 16) {
                             RuleItem(icon: "1.circle", text: "The computer deals a card. You must guess if your next card is higher, lower, or equal.")
@@ -310,15 +258,19 @@ struct GameView: View {
                         Button("Dismiss") {
                             withAnimation { showingRules = false }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 12, fillsWidth: false))
                         .accessibilityIdentifier("dismissRulesButton")
                         .padding(.top, 10)
                     }
-                    .padding(40)
+                    .padding(32)
                     .background(
                         RoundedRectangle(cornerRadius: 24)
-                            .fill(Color(NSColor.windowBackgroundColor))
-                            .shadow(color: .black.opacity(0.3), radius: 20)
+                            .fill(Color.black.opacity(0.82))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 24)
+                                    .stroke(CyberpunkTheme.cyan.opacity(0.5), lineWidth: 1.2)
+                            )
+                            .shadow(color: CyberpunkTheme.cyan.opacity(0.18), radius: 22)
                     )
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
@@ -327,17 +279,51 @@ struct GameView: View {
         .overlay(alignment: .top) {
             if let voiceFeedbackMessage {
                 Text(voiceFeedbackMessage)
-                    .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(CyberpunkTheme.textPrimary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color.black.opacity(0.7))
+                    .background(Color.black.opacity(0.78))
+                    .overlay(
+                        Capsule()
+                            .stroke(CyberpunkTheme.cyan.opacity(0.75), lineWidth: 1)
+                    )
                     .clipShape(Capsule())
                     .padding(.top, 8)
                     .transition(.opacity)
                     .accessibilityIdentifier("voiceCommandFeedback")
             }
         }
+    }
+
+    private func cardStack(imageName: String, rotation: Double, accent: Color) -> some View {
+        ZStack {
+            Image("back")
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 128)
+                .opacity(rotation < 90 ? 1 : 0)
+                .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                .shadow(color: accent.opacity(0.4), radius: 16)
+
+            Image(imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 128)
+                .opacity(rotation >= 90 ? 1 : 0)
+                .rotation3DEffect(.degrees(rotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+                .shadow(color: accent.opacity(0.45), radius: 18)
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(accent.opacity(0.55), lineWidth: 1.2)
+                )
+                .shadow(color: accent.opacity(0.18), radius: 18)
+        )
     }
     
     @State private var isFirstPassed = false
@@ -457,7 +443,7 @@ struct RuleItem: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .foregroundColor(.orange)
+                .foregroundColor(CyberpunkTheme.cyan)
                 .font(.headline)
             
             Text(text)
@@ -465,6 +451,7 @@ struct RuleItem: View {
                 .lineLimit(nil)            // Allows unlimited lines
                 .fixedSize(horizontal: false, vertical: true) // Forces vertical expansion instead of horizontal
                 .multilineTextAlignment(.leading)
+                .foregroundStyle(CyberpunkTheme.textPrimary)
         }
     }
 }
