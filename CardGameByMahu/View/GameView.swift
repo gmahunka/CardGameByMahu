@@ -169,8 +169,28 @@ struct GameView: View {
             .ignoresSafeArea()
             
             GeometryReader { safeAreaGeometry in
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
+                let sectionGap = max(10, safeAreaGeometry.size.height * 0.012)
+
+                ZStack(alignment: .top) {
+                    // Logo as background
+                    VStack {
+                        Spacer()
+                            .frame(height: max(40, safeAreaGeometry.size.height * 0.15))
+                        
+                        Image("emeles")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: safeAreaGeometry.size.height * 0.25)
+                            .opacity(0.5)
+                            .shadow(color: CyberpunkTheme.cyan.opacity(0.08), radius: 16)
+                        
+                        Spacer()
+                    }
+                    .ignoresSafeArea(edges: .bottom)
+                    
+                    // Content on top
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 0) {
                     // Unified Header Bar
                     HStack(alignment: .center, spacing: 0) {
                         // Unified Header Bar
@@ -302,20 +322,9 @@ struct GameView: View {
                             .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 12, x: 0, y: 4)
                     )
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    
-                    GeometryReader { geometry in
-                        let availableHeight = geometry.size.height
-                        let emelesHeight = min(availableHeight * 0.6, safeAreaGeometry.size.height * 0.14)
-                        
-                        Image("emeles")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: emelesHeight)
-                            .shadow(color: CyberpunkTheme.cyan.opacity(0.28), radius: 16)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    }
-                    .frame(height: safeAreaGeometry.size.height * 0.12)
+                            .padding(.vertical, sectionGap * 0.5)
+
+                            Spacer(minLength: sectionGap)
                     
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
@@ -341,6 +350,8 @@ struct GameView: View {
                     }
                     .padding(.horizontal, 30)
                     .padding(.vertical, 4)
+
+                    Spacer(minLength: sectionGap)
                     
                     GeometryReader { geometry in
                         let availableWidth = geometry.size.width
@@ -361,6 +372,8 @@ struct GameView: View {
                         .padding(.vertical, 12)
                     }
                     .frame(height: safeAreaGeometry.size.height * 0.32)
+
+                    Spacer(minLength: sectionGap)
                     
                     if viewModel.waitingForGuess {
                         HStack(spacing: 8) {
@@ -389,7 +402,7 @@ struct GameView: View {
                             .keyboardShortcut(.rightArrow, modifiers: [])
                         }
                         .padding(.horizontal, 16)
-                        .padding(.vertical, max(12, safeAreaGeometry.size.height * 0.02))
+                        .padding(.vertical, sectionGap)
                     } else {
                         Button {
                             if viewModel.remainingCards < 2 {
@@ -410,8 +423,10 @@ struct GameView: View {
                         .accessibilityLabel("Deal")
                         .keyboardShortcut(.space, modifiers: [])
                         .padding(.horizontal, 16)
-                        .padding(.vertical, max(12, safeAreaGeometry.size.height * 0.02))
+                        .padding(.vertical, sectionGap)
                     }
+
+                    Spacer(minLength: sectionGap)
                     
                     HStack(spacing: 12) {
                         VStack(spacing: 6) {
@@ -441,9 +456,13 @@ struct GameView: View {
                         .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.06)
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, max(8, safeAreaGeometry.size.height * 0.01))
+                    .padding(.bottom, sectionGap * 0.5)
+
+                    Spacer(minLength: sectionGap)
                 }
-                .padding(.vertical, 12)
+                .frame(minHeight: safeAreaGeometry.size.height, alignment: .top)
+                .padding(.vertical, sectionGap * 0.5)
+                    }
                 }
             }
         }
