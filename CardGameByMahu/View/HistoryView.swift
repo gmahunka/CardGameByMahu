@@ -10,6 +10,7 @@ import SwiftData
 
 struct HistoryView: View {
     @Query(sort: \RoundHistoryItem.createdAt, order: .reverse) private var history: [RoundHistoryItem]
+    @Environment(\.modelContext) private var modelContext
     private let viewModel = HistoryViewModel()
 
     var body: some View {
@@ -24,6 +25,15 @@ struct HistoryView: View {
                     Text("Match History")
                         .font(.largeTitle.weight(.heavy))
                         .foregroundStyle(CyberpunkTheme.textPrimary)
+                    Spacer()
+                    Button(action: {
+                        viewModel.clearAllHistory(modelContext: modelContext)
+                    }) {
+                        Image(systemName: "trash.fill")
+                            .font(.title3)
+                            .foregroundColor(CyberpunkTheme.magenta)
+                    }
+                    .help("Clear all history")
                 }
                 .padding(.top)
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
