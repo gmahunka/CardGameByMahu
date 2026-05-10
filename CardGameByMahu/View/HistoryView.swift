@@ -64,7 +64,7 @@ struct HistoryView: View {
                                     Image(row.playerCard)
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 60, height: 88)
+                                        .frame(maxWidth: 80, maxHeight: 115)
                                         .shadow(color: CyberpunkTheme.cyan.opacity(0.16), radius: 8)
                                 }
                                 VStack(spacing: 6) {
@@ -74,7 +74,7 @@ struct HistoryView: View {
                                     Image(row.computerCard)
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 60, height: 88)
+                                        .frame(maxWidth: 80, maxHeight: 115)
                                         .shadow(color: CyberpunkTheme.magenta.opacity(0.16), radius: 8)
                                 }
                                 Spacer()

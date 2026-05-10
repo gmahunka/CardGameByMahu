@@ -24,12 +24,12 @@ struct GameView: View {
     @State private var playerRotation: Double = 0
     @State private var computerRotation: Double = 0
 
-    private func cardStack(imageName: String, rotation: Double, accent: Color) -> some View {
+    private func cardStack(imageName: String, rotation: Double, accent: Color, maxWidth: CGFloat = 200) -> some View {
         ZStack {
             Image("back")
                 .resizable()
                 .scaledToFit()
-                .frame(maxHeight: 128)
+                .frame(maxWidth: maxWidth, maxHeight: maxWidth * 100 / 70)
                 .opacity(rotation < 90 ? 1 : 0)
                 .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
                 .shadow(color: accent.opacity(0.4), radius: 16)
@@ -37,7 +37,7 @@ struct GameView: View {
             Image(imageName)
                 .resizable()
                 .scaledToFit()
-                .frame(maxHeight: 128)
+                .frame(maxWidth: maxWidth, maxHeight: maxWidth * 100 / 70)
                 .opacity(rotation >= 90 ? 1 : 0)
                 .rotation3DEffect(.degrees(rotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
                 .shadow(color: accent.opacity(0.45), radius: 18)
@@ -332,18 +332,24 @@ struct GameView: View {
                     .padding(.horizontal, 30)
                     .padding(.vertical, 10)
                     
-                    HStack(spacing: 12) {
-                        Spacer()
-                        cardStack(imageName: viewModel.playerCard, rotation: playerRotation, accent: CyberpunkTheme.cyan)
+                    GeometryReader { geometry in
+                        let availableWidth = geometry.size.width
+                        let cardWidth = min(availableWidth * 0.35, 200)
                         
-                        Spacer()
+                        HStack(spacing: 12) {
+                            Spacer()
+                            cardStack(imageName: viewModel.playerCard, rotation: playerRotation, accent: CyberpunkTheme.cyan, maxWidth: cardWidth)
+                            
+                            Spacer()
 
-                        cardStack(imageName: viewModel.computerCard, rotation: computerRotation, accent: CyberpunkTheme.magenta)
-                        
-                        Spacer()
+                            cardStack(imageName: viewModel.computerCard, rotation: computerRotation, accent: CyberpunkTheme.magenta, maxWidth: cardWidth)
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 12)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 12)
+                    .frame(minHeight: 200)
                     
                     if viewModel.waitingForGuess {
                         HStack(spacing: 8) {

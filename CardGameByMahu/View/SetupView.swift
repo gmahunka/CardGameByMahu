@@ -37,63 +37,78 @@ struct SetupView: View {
                 .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
                 .padding(.horizontal)
 
-                List(viewModel.cardConfigs) { config in
-                    HStack(alignment: .center, spacing: 12) {
-                        Spacer(minLength: 0)
+                GeometryReader { geometry in
+                    let availableWidth = geometry.size.width - 32
+                    let cardSize: CGFloat = 70
+                    let buttonSize: CGFloat = 44
+                    let textFieldWidth: CGFloat = 60
+                    let spacing: CGFloat = 12
+                    let rowHeight: CGFloat = cardSize + 20
+                    let itemWidth = cardSize + spacing + buttonSize + spacing + textFieldWidth + spacing + buttonSize
+                    let columnCount = max(1, Int((availableWidth + spacing) / (itemWidth + spacing)))
+                    
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount), spacing: spacing) {
+                            ForEach(viewModel.cardConfigs) { config in
+                                VStack(alignment: .center, spacing: 8) {
+                                    Image("card\(config.id)")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 100)
+                                        .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 8)
 
-                        Image("card\(config.id)")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 70, height: 100)
-                            .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 8)
-                            .padding(.trailing, 4)
+                                    HStack(alignment: .center, spacing: 8) {
+                                        Button(action: {
+                                            viewModel.decreaseCount(for: config.id)
+                                        }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .font(.system(size: 20, weight: .semibold))
+                                                .frame(width: 32, height: 32)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .foregroundStyle(CyberpunkTheme.magenta)
+                                        .accessibilityLabel("Decrease quantity")
 
-                        Button(action: {
-                            viewModel.decreaseCount(for: config.id)
-                        }) {
-                            Image(systemName: "minus.circle.fill")
-                                .font(.system(size: 26, weight: .semibold))
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(CyberpunkTheme.magenta)
-                        .accessibilityLabel("Decrease quantity")
+                                        TextField(
+                                            "Count",
+                                            value: Binding(
+                                                get: { config.count },
+                                                set: { newValue in
+                                                    viewModel.updateCount(config.id, count: newValue)
+                                                }
+                                            ),
+                                            format: .number
+                                        )
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(width: 50)
+                                        .multilineTextAlignment(.center)
 
-                        TextField(
-                            "Count",
-                            value: Binding(
-                                get: { config.count },
-                                set: { newValue in
-                                    viewModel.updateCount(config.id, count: newValue)
+                                        Button(action: {
+                                            viewModel.increaseCount(for: config.id)
+                                        }) {
+                                            Image(systemName: "plus.circle.fill")
+                                                .font(.system(size: 20, weight: .semibold))
+                                                .frame(width: 32, height: 32)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .foregroundStyle(CyberpunkTheme.cyan)
+                                        .accessibilityLabel("Increase quantity")
+                                    }
                                 }
-                            ),
-                            format: .number
-                        )
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 60)
-                        .multilineTextAlignment(.center)
-
-                        Button(action: {
-                            viewModel.increaseCount(for: config.id)
-                        }) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 26, weight: .semibold))
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
+                                .frame(maxWidth: .infinity)
+                                .padding(10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.black.opacity(0.24))
+                                )
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(CyberpunkTheme.cyan)
-                        .accessibilityLabel("Increase quantity")
-
-                        Spacer(minLength: 0)
+                        .padding(16)
                     }
-                    .padding(.vertical, 10)
-                    .listRowBackground(Color.black.opacity(0.24))
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .background(Color.clear)
+                .frame(maxHeight: .infinity)
 
                 Button(action: {
                     NSApp.keyWindow?.makeFirstResponder(nil)
