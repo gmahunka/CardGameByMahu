@@ -167,10 +167,12 @@ struct GameView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
+            
+            GeometryReader { safeAreaGeometry in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
                     // Unified Header Bar
-                    HStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 0) {
                         // Unified Header Bar
                         if viewModel.isHardcoreMode {
                             Button {
@@ -182,7 +184,7 @@ struct GameView: View {
                                     Text("Quit")
                                         .font(.caption2.weight(.semibold))
                                 }
-                                .frame(height: 44)
+                                .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
                             .accessibilityIdentifier("quitHardcoreButton")
@@ -202,7 +204,7 @@ struct GameView: View {
                                     Text("Voice")
                                         .font(.caption2.weight(.semibold))
                                 }
-                                .frame(height: 44)
+                                .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
                             .accessibilityIdentifier("voiceCommandToggle")
@@ -222,6 +224,7 @@ struct GameView: View {
                                     .font(.caption)
                                     .foregroundStyle(CyberpunkTheme.textSecondary)
                             }
+                            .frame(maxHeight: .infinity)
                             .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.08)
                         } else {
                             // Normal header controls
@@ -235,7 +238,7 @@ struct GameView: View {
                                     Text("Hardcore")
                                         .font(.caption2.weight(.semibold))
                                 }
-                                .frame(height: 44)
+                                .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
                             
@@ -254,7 +257,7 @@ struct GameView: View {
                                     Text("Voice")
                                         .font(.caption2.weight(.semibold))
                                 }
-                                .frame(height: 44)
+                                .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
                             .accessibilityIdentifier("voiceCommandToggle")
@@ -270,15 +273,15 @@ struct GameView: View {
                             } label: {
                                 Image(systemName: "info.circle.fill")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .frame(width: 44, height: 44)
+                                    .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isIconOnly: true))
                             .accessibilityIdentifier("showRulesButton")
                         }
                     }
-                    .frame(minHeight: 88)
+                    .frame(height: 80)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color.white.opacity(0.04))
@@ -301,11 +304,18 @@ struct GameView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     
-                    Image("emeles")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: 100)
-                        .shadow(color: CyberpunkTheme.cyan.opacity(0.28), radius: 16)
+                    GeometryReader { geometry in
+                        let availableHeight = geometry.size.height
+                        let emelesHeight = min(availableHeight * 0.6, safeAreaGeometry.size.height * 0.14)
+                        
+                        Image("emeles")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: emelesHeight)
+                            .shadow(color: CyberpunkTheme.cyan.opacity(0.28), radius: 16)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    }
+                    .frame(height: safeAreaGeometry.size.height * 0.12)
                     
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
@@ -313,7 +323,7 @@ struct GameView: View {
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(CyberpunkTheme.textSecondary)
                             Text("\(viewModel.remainingCards)")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.system(size: min(28, safeAreaGeometry.size.height * 0.08), weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.cyan)
                         }
@@ -330,11 +340,12 @@ struct GameView: View {
                         }
                     }
                     .padding(.horizontal, 30)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 4)
                     
                     GeometryReader { geometry in
                         let availableWidth = geometry.size.width
-                        let cardWidth = min(availableWidth * 0.35, 200)
+                        let availableHeight = geometry.size.height
+                        let cardWidth = min(availableWidth * 0.35, safeAreaGeometry.size.height * 0.2)
                         
                         HStack(spacing: 12) {
                             Spacer()
@@ -349,7 +360,7 @@ struct GameView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 12)
                     }
-                    .frame(minHeight: 200)
+                    .frame(height: safeAreaGeometry.size.height * 0.32)
                     
                     if viewModel.waitingForGuess {
                         HStack(spacing: 8) {
@@ -378,7 +389,7 @@ struct GameView: View {
                             .keyboardShortcut(.rightArrow, modifiers: [])
                         }
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, max(12, safeAreaGeometry.size.height * 0.02))
                     } else {
                         Button {
                             if viewModel.remainingCards < 2 {
@@ -399,7 +410,7 @@ struct GameView: View {
                         .accessibilityLabel("Deal")
                         .keyboardShortcut(.space, modifiers: [])
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 18)
+                        .padding(.vertical, max(12, safeAreaGeometry.size.height * 0.02))
                     }
                     
                     HStack(spacing: 12) {
@@ -408,7 +419,7 @@ struct GameView: View {
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(CyberpunkTheme.textSecondary)
                             Text("\(viewModel.playerScore)")
-                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .font(.system(size: min(30, safeAreaGeometry.size.height * 0.07), weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.cyan)
                         }
@@ -422,7 +433,7 @@ struct GameView: View {
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(CyberpunkTheme.textSecondary)
                             Text("\(viewModel.computerScore)")
-                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .font(.system(size: min(30, safeAreaGeometry.size.height * 0.07), weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.magenta)
                         }
@@ -430,9 +441,10 @@ struct GameView: View {
                         .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.06)
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, max(8, safeAreaGeometry.size.height * 0.01))
                 }
                 .padding(.vertical, 12)
+                }
             }
         }
         .onAppear {
