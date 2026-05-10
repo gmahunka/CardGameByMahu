@@ -43,7 +43,6 @@ struct SetupView: View {
                     let buttonSize: CGFloat = 44
                     let textFieldWidth: CGFloat = 60
                     let spacing: CGFloat = 12
-                    let rowHeight: CGFloat = cardSize + 20
                     let itemWidth = cardSize + spacing + buttonSize + spacing + textFieldWidth + spacing + buttonSize
                     let columnCount = max(1, Int((availableWidth + spacing) / (itemWidth + spacing)))
                     

@@ -355,7 +355,6 @@ struct GameView: View {
                     
                     GeometryReader { geometry in
                         let availableWidth = geometry.size.width
-                        let availableHeight = geometry.size.height
                         let cardWidth = min(availableWidth * 0.35, safeAreaGeometry.size.height * 0.2)
                         
                         HStack(spacing: 12) {
