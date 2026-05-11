@@ -17,6 +17,7 @@ struct GameView: View {
     @State private var showHardcoreOutOfCardsAlert = false
     @State private var voiceService = VoiceCommandService()
     @State private var voiceFeedbackMessage: String?
+    @State private var showEnableVoiceConfirmation = false
 
     @State private var isFirstPassed = false
     let phaseDuration = 0.3
@@ -155,6 +156,22 @@ struct GameView: View {
             }
         }
     }
+
+    private func voiceButtonPressed() {
+        if voiceService.isVoiceModeEnabled {
+            voiceService.disable()
+            showVoiceMessage(voiceService.statusMessage)
+        } else {
+            showEnableVoiceConfirmation = true
+        }
+    }
+
+    private func enableVoiceConfirmed() {
+        voiceService.enable { command in
+            handleVoiceCommand(command)
+        }
+        showVoiceMessage(voiceService.statusMessage)
+    }
     
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -208,15 +225,11 @@ struct GameView: View {
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
                             .accessibilityIdentifier("quitHardcoreButton")
-                            
-                            Spacer()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             
                             // Voice Toggle Button (still available during Hardcore)
                             Button {
-                                voiceService.toggle { command in
-                                    handleVoiceCommand(command)
-                                }
-                                showVoiceMessage(voiceService.statusMessage)
+                                voiceButtonPressed()
                             } label: {
                                 VStack(spacing: 2) {
                                     Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
@@ -229,8 +242,7 @@ struct GameView: View {
                             .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
                             .accessibilityIdentifier("voiceCommandToggle")
                             .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
-                            
-                            Spacer()
+                            .frame(maxWidth: .infinity, alignment: .center)
                             
                             VStack(alignment: .trailing, spacing: 4) {
                                 Text("Hardcore Mode")
@@ -246,6 +258,7 @@ struct GameView: View {
                             }
                             .frame(maxHeight: .infinity)
                             .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.08)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         } else {
                             // Normal header controls
                             // Hardcore Mode Button
@@ -261,15 +274,11 @@ struct GameView: View {
                                 .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
-                            
-                            Spacer()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             
                             // Voice Toggle Button
                             Button {
-                                voiceService.toggle { command in
-                                    handleVoiceCommand(command)
-                                }
-                                showVoiceMessage(voiceService.statusMessage)
+                                voiceButtonPressed()
                             } label: {
                                 VStack(spacing: 2) {
                                     Image(systemName: voiceService.isVoiceModeEnabled ? "mic.fill" : "mic")
@@ -282,8 +291,7 @@ struct GameView: View {
                             .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
                             .accessibilityIdentifier("voiceCommandToggle")
                             .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
-                            
-                            Spacer()
+                            .frame(maxWidth: .infinity, alignment: .center)
                             
                             // Info Button
                             Button {
@@ -297,6 +305,7 @@ struct GameView: View {
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isIconOnly: true))
                             .accessibilityIdentifier("showRulesButton")
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                     }
                     .frame(height: 80)
@@ -500,6 +509,14 @@ struct GameView: View {
 
         } message: {
             Text("You have run out of cards in Hardcore mode. You must quit to continue.")
+        }
+        .alert("Enable Voice Commands", isPresented: $showEnableVoiceConfirmation) {
+            Button("Enable") {
+                enableVoiceConfirmed()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Allow microphone access to use voice commands.")
         }
         .overlay {
             if showingRules {
