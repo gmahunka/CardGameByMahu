@@ -6,10 +6,22 @@
 //
 
 import Foundation
+import SwiftData
 import Testing
 @testable import CardGameByMahu
 
 struct HistoryViewModelTest {
+
+    private func makeInMemoryContext() throws -> ModelContext {
+        let schema = Schema([RoundHistoryItem.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [config])
+        return ModelContext(container)
+    }
+
+    private func roundCount(_ context: ModelContext) throws -> Int {
+        try context.fetchCount(FetchDescriptor<RoundHistoryItem>())
+    }
 
     @Test("rows maps correct round and emphasizes chosen pill")
     func rowsMapsCorrectRound() {
@@ -113,6 +125,22 @@ struct HistoryViewModelTest {
         #expect(rows[0].playerCard == "card2")
         #expect(rows[1].playerCard == "card14")
         #expect(rows[2].playerCard == "card8")
+    }
+
+    @Test("clearAllHistory removes all persisted rounds")
+    func clearAllHistoryRemovesRounds() throws {
+        let sut = HistoryViewModel()
+        let context = try makeInMemoryContext()
+
+        context.insert(makeRound(playerCard: "card2"))
+        context.insert(makeRound(playerCard: "card11"))
+        try context.save()
+
+        #expect(try roundCount(context) == 2)
+
+        sut.clearAllHistory(modelContext: context)
+
+        #expect(try roundCount(context) == 0)
     }
 
     private func makeRound(

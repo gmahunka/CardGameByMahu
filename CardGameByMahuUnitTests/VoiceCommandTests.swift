@@ -87,6 +87,19 @@ struct VoiceCommandParserTests {
 @MainActor
 struct VoiceCommandServiceTests {
 
+    private func waitUntil(
+        attempts: Int = 80,
+        intervalNanoseconds: UInt64 = 10_000_000,
+        _ condition: @MainActor () -> Bool
+    ) async -> Bool {
+        for _ in 0..<attempts {
+            if condition() { return true }
+            try? await Task.sleep(nanoseconds: intervalNanoseconds)
+        }
+
+        return condition()
+    }
+
     @Test
     func service_enableInUITestingSetsExpectedState() {
         let sut = VoiceCommandService(isUITesting: true)
@@ -125,5 +138,21 @@ struct VoiceCommandServiceTests {
         #expect(!sut.isVoiceModeEnabled)
         #expect(!sut.isListening)
         #expect(commands.isEmpty)
+    }
+
+    @Test
+    func service_enableWithUnsupportedLocale_reportsUnavailableAndStaysDisabled() async {
+        let sut = VoiceCommandService(locale: Locale(identifier: "zz-ZZ"), isUITesting: false)
+
+        sut.enable { _ in }
+
+        let completed = await waitUntil {
+            sut.statusMessage != nil
+        }
+
+        #expect(completed)
+        #expect(sut.statusMessage == "Speech recognition is unavailable on this device.")
+        #expect(!sut.isVoiceModeEnabled)
+        #expect(!sut.isListening)
     }
 }

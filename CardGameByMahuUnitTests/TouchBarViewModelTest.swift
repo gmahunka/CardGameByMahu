@@ -96,6 +96,71 @@ struct TouchBarViewModelTests {
         #expect(guessHandlerCalled == true)
         #expect(passedGuess == .lower)  // The first guess option should trigger
     }
+
+    @Test
+    func touchBarViewModel_executesEqualAndHigherGuessHandlersWhenWaitingForGuess() {
+        let gameViewModel = CardGameViewModel(deckSettings: DeckSettings())
+        let mock = MockController()
+        let sut = TouchBarViewModel(gameViewModel: gameViewModel, isPlayTabVisible: true, controller: mock)
+
+        var guesses: [Guess] = []
+        sut.setActionHandlers(
+            deal: nil,
+            guess: { guesses.append($0) }
+        )
+
+        gameViewModel.waitingForGuess = true
+        sut.refresh()
+
+        mock.lastEqual?()
+        mock.lastHigher?()
+
+        #expect(guesses.count == 2)
+        #expect(guesses[0] == .equal)
+        #expect(guesses[1] == .higher)
+    }
+
+    @Test
+    func touchBarViewModel_ignoresGuessButtonsWhenNotWaitingForGuess() {
+        let gameViewModel = CardGameViewModel(deckSettings: DeckSettings())
+        let mock = MockController()
+        let sut = TouchBarViewModel(gameViewModel: gameViewModel, isPlayTabVisible: true, controller: mock)
+
+        var guessHandlerCallCount = 0
+        sut.setActionHandlers(
+            deal: nil,
+            guess: { _ in guessHandlerCallCount += 1 }
+        )
+
+        gameViewModel.waitingForGuess = false
+        sut.refresh()
+
+        mock.lastLower?()
+        mock.lastEqual?()
+        mock.lastHigher?()
+
+        #expect(guessHandlerCallCount == 0)
+    }
+
+    @Test
+    func touchBarViewModel_ignoresDealActionWhenWaitingForGuess() {
+        let gameViewModel = CardGameViewModel(deckSettings: DeckSettings())
+        let mock = MockController()
+        let sut = TouchBarViewModel(gameViewModel: gameViewModel, isPlayTabVisible: true, controller: mock)
+
+        var dealHandlerCalled = false
+        sut.setActionHandlers(
+            deal: { dealHandlerCalled = true },
+            guess: nil
+        )
+
+        gameViewModel.waitingForGuess = true
+        sut.refresh()
+
+        mock.lastDeal?()
+
+        #expect(dealHandlerCalled == false)
+    }
     
     @Test
     func touchBarViewModel_hidesWhenPlayTabNotVisible() {
