@@ -100,7 +100,7 @@ final class VoiceCommandService {
 
         authorizationTask?.cancel()
         authorizationTask = Task { [weak self] in
-            await startListeningIfAuthorized()
+            await self?.startListeningIfAuthorized()
         }
     }
 
@@ -215,8 +215,8 @@ final class VoiceCommandService {
             stopRecognitionSession()
 
             guard shouldRemainEnabled, !isUITesting else { return }
-            Task {
-                await startListeningIfAuthorized()
+            Task { [weak self] in
+                await self?.startListeningIfAuthorized()
             }
         }
     }
