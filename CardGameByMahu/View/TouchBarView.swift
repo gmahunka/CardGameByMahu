@@ -68,7 +68,7 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
         window.touchBar = makeTouchBar()
 
         // Selecting the tab can leave first responder on tab controls, which delays Touch Bar display.
-        DispatchQueue.main.async { [weak window] in
+        Task { @MainActor [weak window] in
             guard let window else { return }
             _ = window.makeFirstResponder(window.contentView)
         }

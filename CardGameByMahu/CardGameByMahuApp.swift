@@ -24,6 +24,10 @@ final class AppNavigationModel: ObservableObject {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var observers: [NSObjectProtocol] = []
 
+    deinit {
+        removeObservers()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         let center = NotificationCenter.default
 
@@ -43,9 +47,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.attachTouchBar(to: note.object as? NSWindow)
         })
 
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             self?.attachTouchBar(to: NSApp.keyWindow ?? NSApp.mainWindow)
         }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        removeObservers()
+    }
+
+    private func removeObservers() {
+        guard !observers.isEmpty else { return }
+        let center = NotificationCenter.default
+        observers.forEach { center.removeObserver($0) }
+        observers.removeAll()
     }
 
     private func attachTouchBar(to window: NSWindow?) {

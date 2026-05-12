@@ -22,7 +22,7 @@ final class HardCoreGameViewModel {
     var optimalGuessCount: Int = 0
     var guessCount: Int = 0
     
-    private var timer: Timer?
+    private var timerTask: Task<Void, Never>?
     private var startDate: Date?
     
     init(deckSettings: DeckSettings) {
@@ -58,18 +58,15 @@ final class HardCoreGameViewModel {
         try? context.save()
         
         startDate = Date()
-        let start = startDate
+        guard let start = startDate else { return }
 
-        let newTimer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self, let start else { return }
-            Task { @MainActor [weak self] in
+        timerTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
                 guard let self else { return }
                 self.elapsedTime = Date().timeIntervalSince(start)
             }
         }
-
-        self.timer = newTimer
-        RunLoop.main.add(newTimer, forMode: .common)
     }
     
     func recordGuess(isOptimal: Bool) {
@@ -122,8 +119,8 @@ final class HardCoreGameViewModel {
     // MARK: - Private Methods
     
     private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+        timerTask?.cancel()
+        timerTask = nil
         startDate = nil
     }
 }

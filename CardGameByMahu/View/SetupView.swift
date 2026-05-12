@@ -111,9 +111,7 @@ struct SetupView: View {
 
                 Button(action: {
                     NSApp.keyWindow?.makeFirstResponder(nil)
-                    DispatchQueue.main.async {
-                        onApply()
-                    }
+                    onApply()
                 }) {
                     Label("Save & Apply", systemImage: "checkmark.circle.fill")
                 }

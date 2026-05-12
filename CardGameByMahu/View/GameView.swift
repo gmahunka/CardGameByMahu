@@ -18,12 +18,20 @@ struct GameView: View {
     @State private var voiceService = VoiceCommandService()
     @State private var voiceFeedbackMessage: String?
     @State private var showEnableVoiceConfirmation = false
+    @State private var roundTask: Task<Void, Never>?
+    @State private var guessTask: Task<Void, Never>?
+    @State private var voiceMessageTask: Task<Void, Never>?
 
     @State private var isFirstPassed = false
     let phaseDuration = 0.3
 
     @State private var playerRotation: Double = 0
     @State private var computerRotation: Double = 0
+
+    private func sleep(seconds: Double) async {
+        let nanoseconds = UInt64((seconds * 1_000_000_000).rounded())
+        try? await Task.sleep(nanoseconds: nanoseconds)
+    }
 
     private func cardStack(imageName: String, rotation: Double, accent: Color, maxWidth: CGFloat = 200) -> some View {
         ZStack {
@@ -56,20 +64,22 @@ struct GameView: View {
     }
 
     private func startNewRound() {
-        // If computer is currently showing its back (180°), normalize to 0 first
-        if computerRotation >= 179 { // tolerate precision
-            withAnimation(.easeInOut(duration: phaseDuration)) {
-                computerRotation = 0
+        roundTask?.cancel()
+        roundTask = Task { @MainActor in
+            // If computer is currently showing its back (180°), normalize to 0 first.
+            if computerRotation >= 179 {
+                withAnimation(.easeInOut(duration: phaseDuration)) {
+                    computerRotation = 0
+                }
+                await sleep(seconds: phaseDuration)
+                guard !Task.isCancelled else { return }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
-                proceedDeal(with: phaseDuration)
-            }
-        } else {
-            proceedDeal(with: phaseDuration)
+
+            await proceedDeal(with: phaseDuration)
         }
     }
 
-    private func proceedDeal(with phaseDuration: Double) {
+    private func proceedDeal(with phaseDuration: Double) async {
         // Flip computer to 90° (hide front)
         withAnimation(.easeInOut(duration: phaseDuration)) {
             computerRotation = 90
@@ -79,22 +89,29 @@ struct GameView: View {
             }
             isFirstPassed = true
         }
-        // Midpoint: deal and complete flip to reveal
-        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
-            viewModel.startRound()
-            withAnimation(.easeInOut(duration: phaseDuration)) {
-                computerRotation = 180
-            }
+
+        // Midpoint: deal and complete flip to reveal.
+        await sleep(seconds: phaseDuration)
+        guard !Task.isCancelled else { return }
+
+        viewModel.startRound()
+        withAnimation(.easeInOut(duration: phaseDuration)) {
+            computerRotation = 180
         }
     }
 
     private func handleGuess(_ guess: Guess) {
-        // Animate to 90° (hide front), then swap content, then complete to 180°.
-        withAnimation(.easeInOut(duration: phaseDuration)) {
-            playerRotation = 90
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + phaseDuration) {
-            viewModel.makeGuess(guess) // swap to revealed card content here
+        guessTask?.cancel()
+        guessTask = Task { @MainActor in
+            // Animate to 90° (hide front), then swap content, then complete to 180°.
+            withAnimation(.easeInOut(duration: phaseDuration)) {
+                playerRotation = 90
+            }
+
+            await sleep(seconds: phaseDuration)
+            guard !Task.isCancelled else { return }
+
+            viewModel.makeGuess(guess)
             withAnimation(.easeInOut(duration: phaseDuration)) {
                 playerRotation = 180
             }
@@ -149,8 +166,12 @@ struct GameView: View {
             voiceFeedbackMessage = message
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        voiceMessageTask?.cancel()
+        voiceMessageTask = Task { @MainActor in
+            await sleep(seconds: 2.0)
+            guard !Task.isCancelled else { return }
             guard voiceFeedbackMessage == message else { return }
+
             withAnimation(.easeInOut(duration: 0.2)) {
                 voiceFeedbackMessage = nil
             }
@@ -483,6 +504,9 @@ struct GameView: View {
             touchBarViewModel?.refresh()
         }
         .onDisappear {
+            roundTask?.cancel()
+            guessTask?.cancel()
+            voiceMessageTask?.cancel()
             voiceService.disable()
             touchBarViewModel?.setActionHandlers(deal: nil, guess: nil)
         }
