@@ -48,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         })
 
         Task { @MainActor [weak self] in
+            await Task.yield()
             self?.attachTouchBar(to: NSApp.keyWindow ?? NSApp.mainWindow)
         }
     }

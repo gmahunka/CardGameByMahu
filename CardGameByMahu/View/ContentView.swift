@@ -76,7 +76,10 @@ struct ContentView: View {
         .onChange(of: navigation.selectedTab) { _, newValue in
             touchBarViewModel.setPlayTabVisible(newValue == .play)
             if newValue == .play {
-                touchBarViewModel.refresh()
+                Task { @MainActor in
+                    await Task.yield()
+                    touchBarViewModel.refresh()
+                }
             }
         }
         .onChange(of: gameViewModel.waitingForGuess) { _, _ in

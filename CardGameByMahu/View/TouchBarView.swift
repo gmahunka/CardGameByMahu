@@ -55,8 +55,20 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
         window?.makeFirstResponder(window?.contentView)
     }
 
+    private func resolveWindow() -> NSWindow? {
+        if let window {
+            return window
+        }
+
+        let currentWindow = NSApp.keyWindow ?? NSApp.mainWindow
+        if let currentWindow {
+            self.window = currentWindow
+        }
+        return currentWindow
+    }
+
     private func refreshTouchBar() {
-        guard let window else { return }
+        guard let window = resolveWindow() else { return }
 
         guard isVisible else {
             window.touchBar = nil
@@ -69,6 +81,7 @@ final class GameTouchBarController: NSObject, NSTouchBarDelegate {
 
         // Selecting the tab can leave first responder on tab controls, which delays Touch Bar display.
         Task { @MainActor [weak window] in
+            await Task.yield()
             guard let window else { return }
             _ = window.makeFirstResponder(window.contentView)
         }
