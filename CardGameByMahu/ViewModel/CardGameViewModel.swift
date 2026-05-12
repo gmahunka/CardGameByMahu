@@ -170,7 +170,9 @@ final class CardGameViewModel {
         }
         
         // Pick a random card, get its value, and delete it from the deck
-        let drawnCard = remainingCards.randomElement()!
+        guard let drawnCard = remainingCards.randomElement() else {
+            return nil
+        }
         let cardValue = drawnCard.value
         context.delete(drawnCard)
         

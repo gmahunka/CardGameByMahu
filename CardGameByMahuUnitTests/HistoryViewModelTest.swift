@@ -138,7 +138,10 @@ struct HistoryViewModelTest {
 
         #expect(try roundCount(context) == 2)
 
-        sut.clearAllHistory(modelContext: context)
+        let result = sut.clearAllHistory(modelContext: context)
+        if case .failure(let details) = result {
+            Issue.record("Expected clearAllHistory to succeed, but failed with: \(details)")
+        }
 
         #expect(try roundCount(context) == 0)
     }

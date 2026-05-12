@@ -3,6 +3,11 @@ import SwiftUI
 import SwiftData
 
 final class HistoryViewModel {
+    enum ClearHistoryResult {
+        case success
+        case failure(String)
+    }
+
     struct RowViewData: Identifiable {
         let id: UUID
         let playerCard: String
@@ -66,12 +71,15 @@ final class HistoryViewModel {
         )
     }
 
-    func clearAllHistory(modelContext: ModelContext) {
+    @discardableResult
+    func clearAllHistory(modelContext: ModelContext) -> ClearHistoryResult {
         do {
             try modelContext.delete(model: RoundHistoryItem.self)
             try modelContext.save()
+            return .success
         } catch {
             print("Error clearing history: \(error.localizedDescription)")
+            return .failure(error.localizedDescription)
         }
     }
 }

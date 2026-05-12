@@ -516,7 +516,7 @@ struct GameView: View {
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Allow microphone access to use voice commands.")
+            Text("Voice commands are optional. We request microphone and speech recognition only to hear commands like deal, lower, equal, and higher. You can always play using the on-screen buttons.")
         }
         .overlay {
             if showingRules {

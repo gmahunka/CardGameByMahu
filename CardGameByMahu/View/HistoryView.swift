@@ -12,6 +12,9 @@ struct HistoryView: View {
     @Query(sort: \RoundHistoryItem.createdAt, order: .reverse) private var history: [RoundHistoryItem]
     @Environment(\.modelContext) private var modelContext
     private let viewModel = HistoryViewModel()
+    @State private var showHistoryStatusAlert = false
+    @State private var historyStatusTitle = ""
+    @State private var historyStatusMessage = ""
 
     var body: some View {
         ZStack {
@@ -27,7 +30,16 @@ struct HistoryView: View {
                         .foregroundStyle(CyberpunkTheme.textPrimary)
                     Spacer()
                     Button(action: {
-                        viewModel.clearAllHistory(modelContext: modelContext)
+                        let result = viewModel.clearAllHistory(modelContext: modelContext)
+                        switch result {
+                        case .success:
+                            historyStatusTitle = "History Cleared"
+                            historyStatusMessage = "All rounds were removed successfully."
+                        case .failure(let details):
+                            historyStatusTitle = "Unable to Clear History"
+                            historyStatusMessage = "Please try again. \(details)"
+                        }
+                        showHistoryStatusAlert = true
                     }) {
                         Image(systemName: "trash.fill")
                             .font(.title3)
@@ -125,6 +137,11 @@ struct HistoryView: View {
                 }
             }
             .padding(.horizontal)
+        }
+        .alert(historyStatusTitle, isPresented: $showHistoryStatusAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(historyStatusMessage)
         }
     }
 }
