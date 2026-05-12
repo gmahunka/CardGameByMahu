@@ -62,11 +62,7 @@ struct ContentView: View {
                 .tag(AppTab.leaderboard)
         }
         .tabViewStyle(.grouped)
-        .sheet(isPresented: $gameViewModel.isHardcoreMode) {
-            HardcoreGameView(viewModel: gameViewModel, touchBarViewModel: touchBarViewModel)
-                .interactiveDismissDisabled(true)
-        }
-        .tint(.orange)
+        .tint(CyberpunkTheme.cyan)
         .onAppear {
             guard !didSetupGameContext else {
                 touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)

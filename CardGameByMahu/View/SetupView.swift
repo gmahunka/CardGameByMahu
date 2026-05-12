@@ -13,103 +13,114 @@ struct SetupView: View {
     let onApply: () -> Void
 
     var body: some View {
-        VStack {
-            HStack {
-                Image(systemName: "gearshape.fill")
-                    .font(.largeTitle)
-                Text("Game Setup")
-                    .font(.title)
-            }
-            .padding(.top)
+        ZStack {
+            CyberBackdrop()
 
-            Button(action: {
-                viewModel.resetToRegularDeck()
-            }) {
-                HStack {
-                    Image(systemName: "suit.spade.fill")
-                    Text("Regular Deck (4 of each)")
+            VStack(spacing: 16) {
+                HStack(spacing: 10) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title)
+                        .foregroundStyle(CyberpunkTheme.cyan)
+                    Text("Game Setup")
+                        .font(.largeTitle.weight(.heavy))
+                        .foregroundStyle(CyberpunkTheme.textPrimary)
                 }
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .cornerRadius(10)
-            }
-            .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
-            .padding(.horizontal)
-            .padding(.bottom, 5)
+                .padding(.top)
+                .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
-            List(viewModel.cardConfigs) { config in
-                HStack(alignment: .center) {
-                    Spacer(minLength: 0)
+                Button(action: {
+                    viewModel.resetToRegularDeck()
+                }) {
+                    Label("Regular Deck (4 of each)", systemImage: "suit.spade.fill")
+                }
+                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 14, fillsWidth: true))
+                .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
+                .padding(.horizontal)
 
-                    Image("card\(config.id)")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 70, height: 100)
-                        .shadow(radius: 2)
-                        .padding(.trailing, 8)
+                GeometryReader { geometry in
+                    let availableWidth = geometry.size.width - 32
+                    let cardSize: CGFloat = 70
+                    let buttonSize: CGFloat = 44
+                    let textFieldWidth: CGFloat = 60
+                    let spacing: CGFloat = 12
+                    let itemWidth = cardSize + spacing + buttonSize + spacing + textFieldWidth + spacing + buttonSize
+                    let columnCount = max(1, Int((availableWidth + spacing) / (itemWidth + spacing)))
+                    
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount), spacing: spacing) {
+                            ForEach(viewModel.cardConfigs) { config in
+                                VStack(alignment: .center, spacing: 8) {
+                                    Image("card\(config.id)")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 100)
+                                        .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 8)
 
-                    Button(action: {
-                        viewModel.decreaseCount(for: config.id)
-                    }) {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 26, weight: .semibold))
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Decrease quantity")
+                                    HStack(alignment: .center, spacing: 8) {
+                                        Button(action: {
+                                            viewModel.decreaseCount(for: config.id)
+                                        }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .font(.system(size: 20, weight: .semibold))
+                                                .frame(width: 32, height: 32)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .foregroundStyle(CyberpunkTheme.magenta)
+                                        .accessibilityLabel("Decrease quantity")
 
-                    TextField(
-                        "Count",
-                        value: Binding(
-                            get: { config.count },
-                            set: { newValue in
-                                viewModel.updateCount(config.id, count: newValue)
+                                        TextField(
+                                            "Count",
+                                            value: Binding(
+                                                get: { config.count },
+                                                set: { newValue in
+                                                    viewModel.updateCount(config.id, count: newValue)
+                                                }
+                                            ),
+                                            format: .number
+                                        )
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(width: 50)
+                                        .multilineTextAlignment(.center)
+
+                                        Button(action: {
+                                            viewModel.increaseCount(for: config.id)
+                                        }) {
+                                            Image(systemName: "plus.circle.fill")
+                                                .font(.system(size: 20, weight: .semibold))
+                                                .frame(width: 32, height: 32)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .foregroundStyle(CyberpunkTheme.cyan)
+                                        .accessibilityLabel("Increase quantity")
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.black.opacity(0.24))
+                                )
                             }
-                        ),
-                        format: .number
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 60)
-                    .multilineTextAlignment(.center)
-
-                    Button(action: {
-                        viewModel.increaseCount(for: config.id)
-                    }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 26, weight: .semibold))
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
+                        }
+                        .padding(16)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Increase quantity")
-
-                    Spacer(minLength: 0)
                 }
-                .padding(.vertical, 8)
-            }
-            .listStyle(.plain)
+                .frame(maxHeight: .infinity)
 
-            Button(action: {
-                NSApp.keyWindow?.makeFirstResponder(nil)
-                DispatchQueue.main.async {
-                    onApply()
+                Button(action: {
+                    NSApp.keyWindow?.makeFirstResponder(nil)
+                    DispatchQueue.main.async {
+                        onApply()
+                    }
+                }) {
+                    Label("Save & Apply", systemImage: "checkmark.circle.fill")
                 }
-            }) {
-                Text("Save & Apply")
-                    .font(.title3)
-                    .bold()
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.green)
-                    .cornerRadius(10)
+                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: true))
+                .accessibilityIdentifier("saveApplyButton")
+                .padding()
             }
-            .accessibilityIdentifier("saveApplyButton")
-            .padding()
         }
     }
 }

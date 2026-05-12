@@ -68,6 +68,7 @@ final class VoiceCommandService {
 
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
+    private var authorizationTask: Task<Void, Never>?
     private var parser = VoiceCommandParser()
     private var shouldRemainEnabled: Bool = false
     private var onCommand: ((VoiceCommand) -> Void)?
@@ -97,8 +98,9 @@ final class VoiceCommandService {
             return
         }
 
-        Task {
-            await startListeningIfAuthorized()
+        authorizationTask?.cancel()
+        authorizationTask = Task { [weak self] in
+            await self?.startListeningIfAuthorized()
         }
     }
 
@@ -106,6 +108,8 @@ final class VoiceCommandService {
         shouldRemainEnabled = false
         isVoiceModeEnabled = false
         isListening = false
+        authorizationTask?.cancel()
+        authorizationTask = nil
         stopRecognitionSession()
         onCommand = nil
         parser = VoiceCommandParser()
@@ -113,6 +117,8 @@ final class VoiceCommandService {
     }
 
     private func startListeningIfAuthorized() async {
+        guard !Task.isCancelled else { return }
+
         guard let speechRecognizer else {
             statusMessage = "Speech recognition is unavailable on this device."
             shouldRemainEnabled = false
@@ -125,7 +131,10 @@ final class VoiceCommandService {
             return
         }
 
+        guard !Task.isCancelled else { return }
+
         let speechStatus = await requestSpeechAuthorization()
+        guard !Task.isCancelled else { return }
         guard speechStatus == .authorized else {
             shouldRemainEnabled = false
             isVoiceModeEnabled = false
@@ -134,7 +143,10 @@ final class VoiceCommandService {
             return
         }
 
+        guard !Task.isCancelled else { return }
+
         let microphoneAllowed = await requestMicrophoneAuthorization()
+        guard !Task.isCancelled else { return }
         guard microphoneAllowed else {
             shouldRemainEnabled = false
             isVoiceModeEnabled = false
@@ -154,6 +166,8 @@ final class VoiceCommandService {
             isListening = false
             statusMessage = "Unable to start voice commands right now."
         }
+
+        authorizationTask = nil
     }
 
     private func startRecognitionSession(with recognizer: SFSpeechRecognizer) throws {
@@ -201,8 +215,8 @@ final class VoiceCommandService {
             stopRecognitionSession()
 
             guard shouldRemainEnabled, !isUITesting else { return }
-            Task {
-                await startListeningIfAuthorized()
+            Task { [weak self] in
+                await self?.startListeningIfAuthorized()
             }
         }
     }

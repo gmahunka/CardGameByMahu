@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SwiftData
 
 final class HistoryViewModel {
     struct RowViewData: Identifiable {
@@ -63,5 +64,14 @@ final class HistoryViewModel {
                 ? (isCorrectAnswer ? .green : .red)
                 : Color.gray.opacity(0.2)
         )
+    }
+
+    func clearAllHistory(modelContext: ModelContext) {
+        do {
+            try modelContext.delete(model: RoundHistoryItem.self)
+            try modelContext.save()
+        } catch {
+            print("Error clearing history: \(error.localizedDescription)")
+        }
     }
 }

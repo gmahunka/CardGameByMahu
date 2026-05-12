@@ -37,99 +37,113 @@ struct LeaderboardView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Image(systemName: "trophy.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.orange)
-                Text("Hardcore Leaderboard")
-                    .font(.title)
-                    .bold()
-            }
-            .padding(.top)
+        ZStack {
+            CyberBackdrop()
 
-            // Sort Options
-            HStack(spacing: 12) {
-                Picker("Sort by:", selection: $sortOption) {
-                    Text("Score").tag(SortOption.score)
-                        .accessibilityIdentifier("sortByScoreButton")
-                    Text("Accuracy").tag(SortOption.accuracy)
-                        .accessibilityIdentifier("sortByAccuracyButton")
-                    Text("Time").tag(SortOption.time)
-                        .accessibilityIdentifier("sortByTimeButton")
+            VStack(spacing: 16) {
+                HStack {
+                    Image(systemName: "trophy.fill")
+                        .font(.title)
+                        .foregroundStyle(CyberpunkTheme.cyan)
+                    Text("Hardcore Leaderboard")
+                        .font(.largeTitle.weight(.heavy))
+                        .foregroundStyle(CyberpunkTheme.textPrimary)
                 }
-                .pickerStyle(.segmented)
-            }
-            .padding(.horizontal)
+                .padding(.top)
+                .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
-            if results.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "list.number")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
-                    Text("No hardcore runs yet")
-                        .font(.headline)
-                    Text("Finish a Hardcore Mode run to appear here.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List {
-                    ForEach(Array(sortedResults.enumerated()), id: \.element.id) { index, result in
-                        HStack(spacing: 12) {
-                            Text("#\(index + 1)")
-                                .font(.headline)
-                                .frame(width: 36, alignment: .leading)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                // Score styling based on sort
-                                if sortOption == .score {
-                                    Text("Score: \(result.scoreReached)")
-                                        .font(.headline.bold())
-                                } else {
-                                    Text("Score: \(result.scoreReached)")
-                                        .font(.subheadline)
-                                }
-                                
-                                if sortOption == .accuracy {
-                                    Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
-                                        .font(.headline.bold())
-                                } else {
-                                    Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
-                                        .font(.subheadline)
-                                }
-                                
-                                if sortOption == .time {
-                                    Text(String(format: "Time: %.1fs", result.timeTaken))
-                                        .font(.headline.bold())
-                                } else {
-                                    Text(String(format: "Time: %.1fs", result.timeTaken))
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            Spacer()
-
-                            Text(result.date, format: .dateTime.year().month().day().hour().minute())
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                            Button(action: {
-                                resultToDelete = result
-                            }) {
-                                Image(systemName: "trash.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.red)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .accessibilityIdentifier("deleteLeaderboardEntrybutton")
-                        .padding(.vertical, 6)
+                HStack(spacing: 12) {
+                    Picker("Sort by:", selection: $sortOption) {
+                        Text("Score").tag(SortOption.score)
+                            .accessibilityIdentifier("sortByScoreButton")
+                        Text("Accuracy").tag(SortOption.accuracy)
+                            .accessibilityIdentifier("sortByAccuracyButton")
+                        Text("Time").tag(SortOption.time)
+                            .accessibilityIdentifier("sortByTimeButton")
                     }
+                    .pickerStyle(.segmented)
                 }
-                .listStyle(.plain)
+                .padding(.horizontal)
+
+                if results.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "list.number")
+                            .font(.system(size: 40))
+                            .foregroundColor(CyberpunkTheme.textSecondary)
+                        Text("No hardcore runs yet")
+                            .font(.headline)
+                            .foregroundStyle(CyberpunkTheme.textPrimary)
+                        Text("Finish a Hardcore Mode run to appear here.")
+                            .font(.subheadline)
+                            .foregroundStyle(CyberpunkTheme.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.04)
+                } else {
+                    List {
+                        ForEach(Array(sortedResults.enumerated()), id: \.element.id) { index, result in
+                            HStack(spacing: 12) {
+                                Text("#\(index + 1)")
+                                    .font(.headline)
+                                    .frame(width: 36, alignment: .leading)
+                                    .foregroundStyle(CyberpunkTheme.cyan)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if sortOption == .score {
+                                        Text("Score: \(result.scoreReached)")
+                                            .font(.headline.bold())
+                                            .foregroundStyle(CyberpunkTheme.textPrimary)
+                                    } else {
+                                        Text("Score: \(result.scoreReached)")
+                                            .font(.subheadline)
+                                            .foregroundStyle(CyberpunkTheme.textPrimary)
+                                    }
+
+                                    if sortOption == .accuracy {
+                                        Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
+                                            .font(.headline.bold())
+                                            .foregroundStyle(CyberpunkTheme.magenta)
+                                    } else {
+                                        Text(String(format: "Accuracy: %.1f%%", result.accuracy * 100))
+                                            .font(.subheadline)
+                                            .foregroundStyle(CyberpunkTheme.textSecondary)
+                                    }
+
+                                    if sortOption == .time {
+                                        Text(String(format: "Time: %.1fs", result.timeTaken))
+                                            .font(.headline.bold())
+                                            .foregroundStyle(CyberpunkTheme.cyan)
+                                    } else {
+                                        Text(String(format: "Time: %.1fs", result.timeTaken))
+                                            .font(.subheadline)
+                                            .foregroundStyle(CyberpunkTheme.textSecondary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                Text(result.date, format: .dateTime.year().month().day().hour().minute())
+                                    .font(.caption)
+                                    .foregroundStyle(CyberpunkTheme.textSecondary)
+
+                                Button(action: {
+                                    resultToDelete = result
+                                }) {
+                                    Image(systemName: "trash.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(CyberpunkTheme.magenta)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .accessibilityIdentifier("deleteLeaderboardEntrybutton")
+                            .padding(.vertical, 6)
+                            .listRowBackground(Color.black.opacity(0.22))
+                        }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                }
             }
         }
         .padding(.horizontal)
