@@ -24,7 +24,7 @@ struct HistoryViewModelTest {
     }
 
     @Test("rows maps correct round and emphasizes chosen pill")
-    func rowsMapsCorrectRound() {
+    func rows_maps_correct_round() {
         let sut = HistoryViewModel()
         let round = makeRound(
             playerCard: "card7",
@@ -68,7 +68,7 @@ struct HistoryViewModelTest {
     }
 
     @Test("rows maps wrong round metadata")
-    func rowsMapsWrongRound() {
+    func rows_maps_wrong_round() {
         let sut = HistoryViewModel()
         let round = makeRound(
             playerCard: "card12",
@@ -94,7 +94,7 @@ struct HistoryViewModelTest {
     }
 
     @Test("rows rounds percentages")
-    func rowsRoundsPercentages() {
+    func rows_rounds_percentages() {
         let sut = HistoryViewModel()
         let round = makeRound(
             lowerChance: 0.124,
@@ -110,7 +110,7 @@ struct HistoryViewModelTest {
     }
 
     @Test("rows preserves input order")
-    func rowsPreservesOrder() {
+    func rows_preserves_order() {
         let sut = HistoryViewModel()
         let first = makeRound(playerCard: "card2")
         let second = makeRound(playerCard: "card14")
@@ -128,7 +128,7 @@ struct HistoryViewModelTest {
     }
 
     @Test("clearAllHistory removes all persisted rounds")
-    func clearAllHistoryRemovesRounds() throws {
+    func clear_all_history_removes_rounds() throws {
         let sut = HistoryViewModel()
         let context = try makeInMemoryContext()
 

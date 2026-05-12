@@ -12,7 +12,7 @@ import Testing
 struct SetupViewModelTest {
 
     @Test("cardConfigs returns all values in configured range")
-    func cardConfigsReturnsFullRange() {
+    func card_configs_returns_full_range() {
         let settings = DeckSettings()
         let sut = SetupViewModel(deckSettings: settings)
 
@@ -24,7 +24,7 @@ struct SetupViewModelTest {
     }
 
     @Test("cardConfigs reflects counts from DeckSettings")
-    func cardConfigsReflectSettingsCounts() {
+    func card_configs_reflect_settings_counts() {
         let settings = DeckSettings()
         settings.setCount(7, for: DeckSettings.minCardValue)
         settings.setCount(2, for: DeckSettings.maxCardValue)
@@ -39,7 +39,7 @@ struct SetupViewModelTest {
     }
 
     @Test("increaseCount increments the selected card value")
-    func increaseCountIncrementsValue() {
+    func increase_count_increments_value() {
         let settings = DeckSettings()
         let sut = SetupViewModel(deckSettings: settings)
         let value = DeckSettings.minCardValue
@@ -51,7 +51,7 @@ struct SetupViewModelTest {
     }
 
     @Test("decreaseCount decrements the selected card value")
-    func decreaseCountDecrementsValue() {
+    func decrease_count_decrements_value() {
         let settings = DeckSettings()
         let sut = SetupViewModel(deckSettings: settings)
         let value = DeckSettings.minCardValue
@@ -63,7 +63,7 @@ struct SetupViewModelTest {
     }
 
     @Test("updateCount sets exact value")
-    func updateCountSetsExactValue() {
+    func update_count_sets_exact_value() {
         let settings = DeckSettings()
         let sut = SetupViewModel(deckSettings: settings)
         let value = DeckSettings.minCardValue + 1
@@ -74,7 +74,7 @@ struct SetupViewModelTest {
     }
 
     @Test("resetToRegularDeck restores defaults")
-    func resetToRegularDeckRestoresDefaults() {
+    func reset_to_regular_deck_restores_defaults() {
         let settings = DeckSettings()
         let sut = SetupViewModel(deckSettings: settings)
 
