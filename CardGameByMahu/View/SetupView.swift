@@ -35,6 +35,7 @@ struct SetupView: View {
                 }
                 .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 14, fillsWidth: true))
                 .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
+                .accessibilityLabel("Regular Deck")
                 .padding(.horizontal)
 
                 GeometryReader { geometry in
@@ -117,8 +118,10 @@ struct SetupView: View {
                 }
                 .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: true))
                 .accessibilityIdentifier("saveApplyButton")
+                .accessibilityLabel("Save & Apply")
                 .padding()
             }
         }
     }
 }
+

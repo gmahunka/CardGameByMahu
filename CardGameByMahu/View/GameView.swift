@@ -295,6 +295,8 @@ struct GameView: View {
                                 .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
+                            .accessibilityIdentifier("hardcoreModeButton")
+                            .accessibilityLabel(viewModel.isHardcoreMode ? "Disable Hardcore Mode" : "Enable Hardcore Mode")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             
                             // Voice Toggle Button
@@ -413,6 +415,7 @@ struct GameView: View {
                             }
                             .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true))
                             .keyboardShortcut(.leftArrow, modifiers: [])
+                            .accessibilityIdentifier("lowerButton")
                             
                             Button {
                                 handleGuess(.equal)
@@ -421,6 +424,7 @@ struct GameView: View {
                             }
                             .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.11, cornerRadius: 12, fillsWidth: true))
                             .keyboardShortcut(.downArrow, modifiers: [])
+                            .accessibilityIdentifier("equalButton")
                             
                             Button {
                                 handleGuess(.higher)
@@ -429,6 +433,7 @@ struct GameView: View {
                             }
                             .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true))
                             .keyboardShortcut(.rightArrow, modifiers: [])
+                            .accessibilityIdentifier("higherButton")
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, sectionGap)
@@ -518,8 +523,10 @@ struct GameView: View {
                 viewModel.resetDeck()
             }
             .accessibilityIdentifier("reshuffleAlertButton")
+            .accessibilityLabel("Reshuffle Deck Alert")
             Button("Cancel", role: .cancel) { }
                 .accessibilityIdentifier("reshuffleAlertCancelButton")
+                .accessibilityLabel("Cancel Reshuffle Alert")
         } message: {
             Text("You need at least 2 cards to play a round. Please reshuffle the deck to continue.")
         }
@@ -568,6 +575,7 @@ struct GameView: View {
                         }
                         .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 12, fillsWidth: false))
                         .accessibilityIdentifier("dismissRulesButton")
+                        .accessibilityLabel("Dismiss Rules")
                         .padding(.top, 10)
                     }
                     .padding(32)

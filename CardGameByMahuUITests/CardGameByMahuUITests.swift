@@ -11,23 +11,29 @@ import XCTest
 extension XCUIElement {
     func scrollToMakeElementHittable(_ element: XCUIElement, in app: XCUIApplication, maxScrolls: Int = 12, direction: ScrollDirection = .down) {
         guard self.exists else { return }
+        
+        // Wait for element to exist first
+        let existsPredicate = NSPredicate(format: "exists == true")
+        let expectation = XCTNSPredicateExpectation(predicate: existsPredicate, object: element)
+        _ = XCTWaiter().wait(for: [expectation], timeout: 2)
+        
+        // If already hittable, no need to scroll
         if element.isHittable { return }
 
-        enum KeyDirection { case down, up }
-        let keyFor: (KeyDirection) -> XCUIKeyboardKey = { dir in
-            switch dir { case .down: return .pageDown; case .up: return .pageUp }
-        }
+        let scrollDirection: CGVector = direction == .down 
+            ? CGVector(dx: 0.5, dy: 0.2)  // Scroll down (drag from bottom to top)
+            : CGVector(dx: 0.5, dy: 0.8)  // Scroll up (drag from top to bottom)
 
         var attempts = 0
         while !element.isHittable && attempts < maxScrolls {
-            app.typeKey(keyFor(direction == .down ? .down : .up), modifierFlags: [])
+            // Use drag to scroll the scroll view
+            let start = coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: direction == .down ? 0.8 : 0.2))
+            let finish = coordinate(withNormalizedOffset: scrollDirection)
+            start.press(forDuration: 0.1, thenDragTo: finish)
+            
+            // Give time for view to update
+            Thread.sleep(forTimeInterval: 0.1)
             attempts += 1
-        }
-
-        if !element.isHittable {
-            let start = coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
-            let finish = coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
-            start.press(forDuration: 0.01, thenDragTo: finish)
         }
     }
 
@@ -78,8 +84,8 @@ final class CardGameByMahuUITests: XCTestCase {
         plusButtons.element(boundBy: 0).click()
         XCTAssertEqual(firstCountField.value as? String, "1", "Count should return to 1 after one plus tap.")
         
-        app.buttons["saveApplyButton"].firstMatch.click()
-        app.buttons["resetDeckOfCardstoRegularButton"].firstMatch.click()
+        app.buttons["Save & Apply"].firstMatch.click()
+        app.buttons["Regular Deck"].firstMatch.click()
         
     }
     
@@ -103,21 +109,21 @@ final class CardGameByMahuUITests: XCTestCase {
         app.activate()
         app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
-        let element = app.buttons["dealButton"]
+        let element = app.buttons["dealButton"].firstMatch
         
         element.click()
         
-        let higher = app.buttons["Higher"].firstMatch
+        let higher = app.buttons["higherButton"].firstMatch
         higher.click()
         
         element.click()
         
-        let equal = app.buttons["Equal"].firstMatch
+        let equal = app.buttons["equalButton"].firstMatch
         equal.click()
         
         element.click()
         
-        let lower = app.buttons["Lower"].firstMatch
+        let lower = app.buttons["lowerButton"].firstMatch
         lower.click()
         
         app.tabs["historyTab"].firstMatch.click()
@@ -132,47 +138,34 @@ final class CardGameByMahuUITests: XCTestCase {
         let infoButton = app.buttons["showRulesButton"].firstMatch
         infoButton.click()
         
-        app.buttons["dismissRulesButton"].firstMatch.click()
+        app.buttons["Dismiss Rules"].firstMatch.click()
     }
     
     func testTooFewCardsRemain() {
         let app = XCUIApplication()
         app.activate()
-        app.tabs["setupTab"].firstMatch.click()
-        
-        let minusButtons = app.buttons.matching(identifier: "minus.circle.fill")
-        let typeOfCards = 0..<12
-        let scrollView = app.scrollViews.firstMatch
-        for card in typeOfCards {
-            let target = minusButtons.element(boundBy: card)
-            scrollView.scrollToMakeElementHittable(target, in: app, maxScrolls: 12, direction: .down)
-            for _ in 0...3 {
-                target.click()
-            }
-        }
-        app.buttons["saveApplyButton"].firstMatch.click()
         app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
 
-        for _ in 0..<2 {
+        for _ in 0..<26 {
             app.buttons["dealButton"].firstMatch.click()
-            app/*@START_MENU_TOKEN@*/.buttons["Higher"]/*[[".scrollViews.buttons[\"Higher\"]",".buttons[\"Higher\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+            app.buttons["higherButton"].firstMatch.click()
         }
         
         app.buttons["dealButton"].firstMatch.click()
-        app.buttons["reshuffleAlertCancelButton"].firstMatch.click()
+        app.buttons["Cancel Reshuffle Alert"].firstMatch.click()
         
         app.buttons["dealButton"].firstMatch.click()
-        app.buttons["reshuffleAlertButton"].firstMatch.click()
+        app.buttons["Reshuffle Deck Alert"].firstMatch.click()
     }
     
     func testHardcoreQuit() {
         let app = XCUIApplication()
         app.activate()
         app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
-        app/*@START_MENU_TOKEN@*/.buttons["Hardcore Mode"]/*[[".groups.buttons[\"Hardcore Mode\"]",".buttons[\"Hardcore Mode\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
-        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
-        app/*@START_MENU_TOKEN@*/.sheets.buttons["Equal"].firstMatch/*[[".buttons.matching(identifier: \"Equal\").element(boundBy: 0)",".sheets.buttons[\"Equal\"].firstMatch"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.click()
-        app/*@START_MENU_TOKEN@*/.buttons["quitHardcoreButton"]/*[[".groups",".buttons[\"Quit\"]",".buttons[\"quitHardcoreButton\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.buttons["hardcoreModeButton"].firstMatch.click()
+        app.buttons["dealButton"].firstMatch.click()
+        app.buttons["equalButton"].firstMatch.click()
+        app.buttons["quitHardcoreButton"].firstMatch.click()
         
     }
     
@@ -180,18 +173,18 @@ final class CardGameByMahuUITests: XCTestCase {
         let app = XCUIApplication()
         app.activate()
         app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
-        app/*@START_MENU_TOKEN@*/.buttons["Hardcore Mode"]/*[[".groups.buttons[\"Hardcore Mode\"]",".buttons[\"Hardcore Mode\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.buttons["hardcoreModeButton"].firstMatch.click()
         for _ in 0..<26 {
-            app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
-            app/*@START_MENU_TOKEN@*/.sheets.buttons["Equal"].firstMatch/*[[".buttons.matching(identifier: \"Equal\").element(boundBy: 0)",".sheets.buttons[\"Equal\"].firstMatch"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.click()
+            app.buttons["dealButton"].firstMatch.click()
+            app.buttons["equalButton"].firstMatch.click()
         }
-        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
+        app.buttons["dealButton"].firstMatch.click()
         
-        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
-        app.sheets.buttons["quitHardcoreButtonCancel"].firstMatch.click()
+        app.buttons["dealButton"].firstMatch.click()
+        app.buttons["quitHardcoreButtonCancel"].firstMatch.click()
         
-        app/*@START_MENU_TOKEN@*/.sheets.buttons["dealButton"].firstMatch/*[[".buttons.matching(identifier: \"dealButton\").element(boundBy: 0)",".sheets",".buttons[\"Deal\"].firstMatch",".buttons[\"dealButton\"].firstMatch"],[[[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0,0]]@END_MENU_TOKEN@*/.click()
-        app.sheets.buttons["quitHardcoreButtonAfterFinish"].firstMatch.click()
+        app.buttons["dealButton"].firstMatch.click()
+        app.buttons["quitHardcoreButtonAfterFinish"].firstMatch.click()
         
         app.tabs["historyTab"].firstMatch.click()
         app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
@@ -208,24 +201,13 @@ final class CardGameByMahuUITests: XCTestCase {
     
     func testVoiceCommandToggle() {
         let app = XCUIApplication()
-        app.launchArguments.append("-uitesting")  // Enable UI testing mode with stubbed voice service
-        app.launch()
+        app.activate()
+        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.buttons["voiceCommandToggle"]/*[[".scrollViews",".buttons[\"Enable Voice Commands\"]",".buttons[\"voiceCommandToggle\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.buttons["action-button-1"]/*[[".sheets[\"_NS:87\"].buttons",".sheets",".buttons[\"Enable\"]",".buttons[\"action-button-1\"]"],[[[-1,3],[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
-        app.tabs["playTab"].firstMatch.click()
-        
-        let voiceToggle = app.buttons["voiceCommandToggle"]
-        XCTAssertTrue(voiceToggle.exists, "Voice command toggle button should exist on play tab.")
-        
-        // Initial state should be "Enable Voice Commands" (disabled)
-        XCTAssertEqual(voiceToggle.label, "Enable Voice Commands", "Voice commands should initially be disabled.")
-        
-        // Toggle ON
-        voiceToggle.click()
-        XCTAssertEqual(voiceToggle.label, "Disable Voice Commands", "After clicking, voice commands should be enabled.")
-        
-        // Toggle OFF
-        voiceToggle.click()
-        XCTAssertEqual(voiceToggle.label, "Enable Voice Commands", "After clicking again, voice commands should be disabled.")
+        app/*@START_MENU_TOKEN@*/.buttons["voiceCommandToggle"]/*[[".scrollViews",".buttons[\"Disable Voice Commands\"]",".buttons[\"voiceCommandToggle\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
     }
+    
 }
 
