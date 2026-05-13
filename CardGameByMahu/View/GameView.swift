@@ -27,10 +27,24 @@ struct GameView: View {
 
     @State private var playerRotation: Double = 0
     @State private var computerRotation: Double = 0
+    
+    @State private var playerScaleEffect: CGFloat = 1.0
+    @State private var computerScaleEffect: CGFloat = 1.0
 
     private func sleep(seconds: Double) async {
         let nanoseconds = UInt64((seconds * 1_000_000_000).rounded())
         try? await Task.sleep(nanoseconds: nanoseconds)
+    }
+    
+    private func triggerScoreAnimation(scale: Binding<CGFloat>) {
+        withAnimation(.easeInOut(duration: 0.6)) {
+            scale.wrappedValue = 1.3
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                scale.wrappedValue = 1.0
+            }
+        }
     }
 
     private func cardStack(imageName: String, rotation: Double, accent: Color, maxWidth: CGFloat = 200) -> some View {
@@ -471,6 +485,10 @@ struct GameView: View {
                                 .font(.system(size: min(30, safeAreaGeometry.size.height * 0.07), weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.cyan)
+                                .scaleEffect(playerScaleEffect)
+                                .onChange(of: viewModel.playerScore) { _, _ in
+                                    triggerScoreAnimation(scale: $playerScaleEffect)
+                                }
                         }
                         .frame(maxWidth: .infinity)
                         .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06)
@@ -485,6 +503,10 @@ struct GameView: View {
                                 .font(.system(size: min(30, safeAreaGeometry.size.height * 0.07), weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.magenta)
+                                .scaleEffect(computerScaleEffect)
+                                .onChange(of: viewModel.computerScore) { _, _ in
+                                    triggerScoreAnimation(scale: $computerScaleEffect)
+                                }
                         }
                         .frame(maxWidth: .infinity)
                         .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.06)
