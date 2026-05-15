@@ -273,8 +273,9 @@ struct GameView: View {
                                         .font(.caption2.weight(.semibold))
                                 }
                                 .frame(maxHeight: .infinity)
+                                .foregroundStyle(voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.cyan.opacity(0.4))
                             }
-                            .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
+                            .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isPulsing: voiceService.isVoiceModeEnabled))
                             .accessibilityIdentifier("voiceCommandToggle")
                             .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -324,8 +325,9 @@ struct GameView: View {
                                         .font(.caption2.weight(.semibold))
                                 }
                                 .frame(maxHeight: .infinity)
+                                .foregroundStyle(voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.cyan.opacity(0.4))
                             }
-                            .buttonStyle(CompactNeonButtonStyle(accent: voiceService.isVoiceModeEnabled ? CyberpunkTheme.cyan : CyberpunkTheme.panelStroke))
+                            .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isPulsing: voiceService.isVoiceModeEnabled))
                             .accessibilityIdentifier("voiceCommandToggle")
                             .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
                             .frame(maxWidth: .infinity, alignment: .center)

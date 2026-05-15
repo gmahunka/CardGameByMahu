@@ -154,22 +154,31 @@ struct NeonButtonStyle: ButtonStyle {
 struct CompactNeonButtonStyle: ButtonStyle {
     var accent: Color = CyberpunkTheme.cyan
     var isIconOnly: Bool = false
+    var isPulsing: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(accent.opacity(configuration.isPressed ? 1.0 : 0.9))
-            .padding(.horizontal, isIconOnly ? 8 : 12)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(accent.opacity(configuration.isPressed ? 0.9 : 0.7), lineWidth: 1.2)
-                    )
-            )
-            .shadow(color: accent.opacity(configuration.isPressed ? 0.35 : 0.15), radius: configuration.isPressed ? 10 : 6)
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: configuration.isPressed)
+        TimelineView(.animation(minimumInterval: 0.05)) { timeline in
+            let elapsed = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 2.0)
+            let pulsePhase = sin(elapsed * .pi)
+            
+            configuration.label
+                .foregroundStyle(accent.opacity(configuration.isPressed ? 1.0 : 0.9))
+                .padding(.horizontal, isIconOnly ? 8 : 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(accent.opacity(configuration.isPressed ? 0.9 : 0.7), lineWidth: 1.2)
+                        )
+                )
+                .shadow(
+                    color: accent.opacity(configuration.isPressed ? 0.35 : (isPulsing ? 0.15 + pulsePhase * 0.2 : 0.15)),
+                    radius: configuration.isPressed ? 10 : (isPulsing ? 6 + pulsePhase * 4 : 6)
+                )
+                .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.7), value: configuration.isPressed)
+        }
     }
 }
