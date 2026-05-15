@@ -29,23 +29,25 @@ struct HistoryView: View {
                         .font(.largeTitle.weight(.heavy))
                         .foregroundStyle(CyberpunkTheme.textPrimary)
                     Spacer()
-                    Button(action: {
-                        let result = viewModel.clearAllHistory(modelContext: modelContext)
-                        switch result {
-                        case .success:
-                            historyStatusTitle = "History Cleared"
-                            historyStatusMessage = "All rounds were removed successfully."
-                        case .failure(let details):
-                            historyStatusTitle = "Unable to Clear History"
-                            historyStatusMessage = "Please try again. \(details)"
+                    if !history.isEmpty {
+                        Button(action: {
+                            let result = viewModel.clearAllHistory(modelContext: modelContext)
+                            switch result {
+                            case .success:
+                                historyStatusTitle = "History Cleared"
+                                historyStatusMessage = "All rounds were removed successfully."
+                            case .failure(let details):
+                                historyStatusTitle = "Unable to Clear History"
+                                historyStatusMessage = "Please try again. \(details)"
+                            }
+                            showHistoryStatusAlert = true
+                        }) {
+                            Image(systemName: "trash.fill")
+                                .font(.title3)
+                                .foregroundColor(CyberpunkTheme.magenta)
                         }
-                        showHistoryStatusAlert = true
-                    }) {
-                        Image(systemName: "trash.fill")
-                            .font(.title3)
-                            .foregroundColor(CyberpunkTheme.magenta)
+                        .help("Clear all history")
                     }
-                    .help("Clear all history")
                 }
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
