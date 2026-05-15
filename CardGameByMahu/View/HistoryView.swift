@@ -21,7 +21,7 @@ struct HistoryView: View {
             CyberBackdrop()
 
             VStack(spacing: 16) {
-                HStack(spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
                     Image(systemName: "clock.fill")
                         .font(.title)
                         .foregroundStyle(CyberpunkTheme.cyan)
@@ -47,7 +47,6 @@ struct HistoryView: View {
                     }
                     .help("Clear all history")
                 }
-                .padding(.top)
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
                 if history.isEmpty {

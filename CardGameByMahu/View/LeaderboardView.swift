@@ -41,7 +41,7 @@ struct LeaderboardView: View {
             CyberBackdrop()
 
             VStack(spacing: 16) {
-                HStack {
+                HStack(alignment: .center) {
                     Image(systemName: "trophy.fill")
                         .font(.title)
                         .foregroundStyle(CyberpunkTheme.cyan)
@@ -49,7 +49,6 @@ struct LeaderboardView: View {
                         .font(.largeTitle.weight(.heavy))
                         .foregroundStyle(CyberpunkTheme.textPrimary)
                 }
-                .padding(.top)
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
                 HStack(spacing: 12) {

@@ -16,16 +16,16 @@ struct SetupView: View {
         ZStack {
             CyberBackdrop()
 
-            VStack(spacing: 16) {
-                HStack(spacing: 10) {
+            VStack(alignment: .center, spacing: 16) {
+                HStack(alignment: .center, spacing: 10) {
                     Image(systemName: "gearshape.fill")
                         .font(.title)
                         .foregroundStyle(CyberpunkTheme.cyan)
                     Text("Game Setup")
                         .font(.largeTitle.weight(.heavy))
                         .foregroundStyle(CyberpunkTheme.textPrimary)
+                        .padding(.vertical, 2)
                 }
-                .padding(.top)
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
                 Button(action: {
