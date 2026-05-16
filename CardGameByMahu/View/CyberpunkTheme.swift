@@ -101,26 +101,28 @@ struct CyberBackdrop: View {
 struct CyberPanel: ViewModifier {
     var accent: Color = CyberpunkTheme.cyan
     var fillOpacity: Double = 0.08
+    var scale: CGFloat = 1.0
+    var contentPadding: CGFloat = 16
 
     func body(content: Content) -> some View {
         content
-            .padding(16)
+            .padding(contentPadding * scale)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: 18 * scale, style: .continuous)
                     .fill(CyberpunkTheme.panelFill.opacity(fillOpacity / 0.08))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(accent.opacity(0.55), lineWidth: 1.2)
+                        RoundedRectangle(cornerRadius: 18 * scale, style: .continuous)
+                            .stroke(accent.opacity(0.55), lineWidth: 1.2 * scale)
                     )
-                    .shadow(color: accent.opacity(0.18), radius: 14, x: 0, y: 0)
-                    .shadow(color: .black.opacity(0.35), radius: 18, x: 0, y: 10)
+                    .shadow(color: accent.opacity(0.18), radius: 14 * scale, x: 0, y: 0)
+                    .shadow(color: .black.opacity(0.35), radius: 18 * scale, x: 0, y: 10 * scale)
             )
     }
 }
 
 extension View {
-    func cyberPanel(accent: Color = CyberpunkTheme.cyan, fillOpacity: Double = 0.08) -> some View {
-        modifier(CyberPanel(accent: accent, fillOpacity: fillOpacity))
+    func cyberPanel(accent: Color = CyberpunkTheme.cyan, fillOpacity: Double = 0.08, scale: CGFloat = 1.0, contentPadding: CGFloat = 16) -> some View {
+        modifier(CyberPanel(accent: accent, fillOpacity: fillOpacity, scale: scale, contentPadding: contentPadding))
     }
 }
 
@@ -129,23 +131,24 @@ struct NeonButtonStyle: ButtonStyle {
     var fillOpacity: Double = 0.12
     var cornerRadius: CGFloat = 14
     var fillsWidth: Bool = false
+    var scale: CGFloat = 1.0
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
             .foregroundStyle(CyberpunkTheme.textPrimary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16 * scale)
+            .padding(.vertical, 12 * scale)
             .frame(maxWidth: fillsWidth ? .infinity : nil)
             .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                RoundedRectangle(cornerRadius: cornerRadius * scale, style: .continuous)
                     .fill(Color.white.opacity(fillOpacity))
                     .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .stroke(accent.opacity(configuration.isPressed ? 1.0 : 0.8), lineWidth: 1.4)
+                        RoundedRectangle(cornerRadius: cornerRadius * scale, style: .continuous)
+                            .stroke(accent.opacity(configuration.isPressed ? 1.0 : 0.8), lineWidth: 1.4 * scale)
                     )
             )
-            .shadow(color: accent.opacity(configuration.isPressed ? 0.50 : 0.30), radius: configuration.isPressed ? 18 : 12)
+            .shadow(color: accent.opacity(configuration.isPressed ? 0.50 : 0.30), radius: configuration.isPressed ? 18 * scale : 12 * scale)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(.spring(response: 0.22, dampingFraction: 0.75), value: configuration.isPressed)
     }
@@ -155,6 +158,7 @@ struct CompactNeonButtonStyle: ButtonStyle {
     var accent: Color = CyberpunkTheme.cyan
     var isIconOnly: Bool = false
     var isPulsing: Bool = false
+    var scale: CGFloat = 1.0
 
     func makeBody(configuration: Configuration) -> some View {
         TimelineView(.animation(minimumInterval: 0.05)) { timeline in
@@ -163,19 +167,19 @@ struct CompactNeonButtonStyle: ButtonStyle {
             
             configuration.label
                 .foregroundStyle(accent.opacity(configuration.isPressed ? 1.0 : 0.9))
-                .padding(.horizontal, isIconOnly ? 8 : 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, (isIconOnly ? 8 : 12) * scale)
+                .padding(.vertical, 8 * scale)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12 * scale, style: .continuous)
                         .fill(Color.white.opacity(0.05))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(accent.opacity(configuration.isPressed ? 0.9 : 0.7), lineWidth: 1.2)
+                            RoundedRectangle(cornerRadius: 12 * scale, style: .continuous)
+                                .stroke(accent.opacity(configuration.isPressed ? 0.9 : 0.7), lineWidth: 1.2 * scale)
                         )
                 )
                 .shadow(
                     color: accent.opacity(configuration.isPressed ? 0.35 : (isPulsing ? 0.15 + pulsePhase * 0.2 : 0.15)),
-                    radius: configuration.isPressed ? 10 : (isPulsing ? 6 + pulsePhase * 4 : 6)
+                    radius: configuration.isPressed ? 10 * scale : (isPulsing ? (6 + pulsePhase * 4) * scale : 6 * scale)
                 )
                 .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
                 .animation(.spring(response: 0.2, dampingFraction: 0.7), value: configuration.isPressed)

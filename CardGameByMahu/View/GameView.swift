@@ -47,7 +47,7 @@ struct GameView: View {
         }
     }
 
-    private func cardStack(imageName: String, rotation: Double, accent: Color, maxWidth: CGFloat = 200) -> some View {
+    private func cardStack(imageName: String, rotation: Double, accent: Color, maxWidth: CGFloat = 200, layoutScale: CGFloat = 1.0) -> some View {
         ZStack {
             Image("back")
                 .resizable()
@@ -65,15 +65,15 @@ struct GameView: View {
                 .rotation3DEffect(.degrees(rotation + 180), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
                 .shadow(color: accent.opacity(0.45), radius: 18)
         }
-        .padding(10)
+        .padding(10 * layoutScale)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 20 * layoutScale, style: .continuous)
                 .fill(Color.white.opacity(0.04))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(accent.opacity(0.55), lineWidth: 1.2)
+                    RoundedRectangle(cornerRadius: 20 * layoutScale, style: .continuous)
+                        .stroke(accent.opacity(0.55), lineWidth: 1.2 * layoutScale)
                 )
-                .shadow(color: accent.opacity(0.18), radius: 18)
+                .shadow(color: accent.opacity(0.18), radius: 18 * layoutScale)
         )
     }
 
@@ -221,20 +221,23 @@ struct GameView: View {
             .ignoresSafeArea()
             
             GeometryReader { safeAreaGeometry in
-                let sectionGap = max(10, safeAreaGeometry.size.height * 0.012)
+                let base = min(safeAreaGeometry.size.width, safeAreaGeometry.size.height)
+                let layoutScale = max(0.65, min(1.6, base / 700))
+                let sectionGap = max(4, safeAreaGeometry.size.height * 0.012 * layoutScale)
+                let headerControlHeight = max(58, 70 * layoutScale)
 
                 ZStack(alignment: .top) {
                     // Logo as background
                     VStack {
                         Spacer()
-                            .frame(height: max(40, safeAreaGeometry.size.height * 0.15))
+                            .frame(height: max(28 * layoutScale, safeAreaGeometry.size.height * 0.12 * layoutScale))
                         
                         Image("emeles")
                             .resizable()
                             .scaledToFit()
-                            .frame(maxHeight: safeAreaGeometry.size.height * 0.25)
+                            .frame(maxHeight: safeAreaGeometry.size.height * 0.25 * layoutScale)
                             .opacity(0.5)
-                            .shadow(color: CyberpunkTheme.cyan.opacity(0.08), radius: 16)
+                            .shadow(color: CyberpunkTheme.cyan.opacity(0.08), radius: 16 * layoutScale)
                         
                         Spacer()
                     }
@@ -260,7 +263,7 @@ struct GameView: View {
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
                             .accessibilityIdentifier("quitHardcoreButton")
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, minHeight: headerControlHeight, maxHeight: headerControlHeight, alignment: .leading)
                             
                             // Voice Toggle Button (still available during Hardcore)
                             Button {
@@ -278,22 +281,29 @@ struct GameView: View {
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isPulsing: voiceService.isVoiceModeEnabled))
                             .accessibilityIdentifier("voiceCommandToggle")
                             .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, minHeight: headerControlHeight, maxHeight: headerControlHeight, alignment: .center)
                             
-                            VStack(alignment: .trailing, spacing: 4) {
+                            VStack(alignment: .trailing, spacing: 1) {
                                 Text("Hardcore Mode")
-                                    .font(.headline.weight(.bold))
+                                    .font(.system(size: 12 * layoutScale, weight: .bold, design: .rounded))
                                     .foregroundStyle(CyberpunkTheme.magenta)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
                                 Text(String(format: "Time: %.1fs", viewModel.hardcoreElapsedTime))
-                                    .font(.title3.bold())
+                                    .font(.system(size: 16 * layoutScale, weight: .bold, design: .rounded))
                                     .monospacedDigit()
                                     .foregroundStyle(CyberpunkTheme.textPrimary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
                                 Text(String(format: "Optimal guesses: %.1f%%", viewModel.hardcoreAccuracyPercent))
-                                    .font(.caption)
+                                    .font(.system(size: 15 * layoutScale, weight: .semibold, design: .rounded))
                                     .foregroundStyle(CyberpunkTheme.textSecondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
                             }
-                            .frame(maxHeight: .infinity)
-                            .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.08)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 170, minHeight: headerControlHeight, maxHeight: headerControlHeight, alignment: .trailing)
+                            .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.08, contentPadding: 8)
                             .frame(maxWidth: .infinity, alignment: .trailing)
                         } else {
                             // Normal header controls
@@ -312,7 +322,7 @@ struct GameView: View {
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.magenta))
                             .accessibilityIdentifier("hardcoreModeButton")
                             .accessibilityLabel(viewModel.isHardcoreMode ? "Disable Hardcore Mode" : "Enable Hardcore Mode")
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity, minHeight: headerControlHeight, maxHeight: headerControlHeight, alignment: .leading)
                             
                             // Voice Toggle Button
                             Button {
@@ -330,7 +340,7 @@ struct GameView: View {
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isPulsing: voiceService.isVoiceModeEnabled))
                             .accessibilityIdentifier("voiceCommandToggle")
                             .accessibilityLabel(voiceService.isVoiceModeEnabled ? "Disable Voice Commands" : "Enable Voice Commands")
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, minHeight: headerControlHeight, maxHeight: headerControlHeight, alignment: .center)
                             
                             // Info Button
                             Button {
@@ -344,10 +354,10 @@ struct GameView: View {
                             }
                             .buttonStyle(CompactNeonButtonStyle(accent: CyberpunkTheme.cyan, isIconOnly: true))
                             .accessibilityIdentifier("showRulesButton")
-                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .frame(maxWidth: .infinity, minHeight: headerControlHeight, maxHeight: headerControlHeight, alignment: .trailing)
                         }
                     }
-                    .frame(height: 80)
+                    .frame(height: max(68, 82 * layoutScale))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
                     .background(
@@ -374,17 +384,17 @@ struct GameView: View {
 
                             Spacer(minLength: sectionGap)
                     
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 12 * layoutScale) {
+                        VStack(alignment: .leading) {
                             Text("Cards Remaining")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(CyberpunkTheme.textSecondary)
                             Text("\(viewModel.remainingCards)")
-                                .font(.system(size: min(28, safeAreaGeometry.size.height * 0.08), weight: .bold, design: .rounded))
+                                .font(.system(size: safeAreaGeometry.size.height * 0.06 * layoutScale, weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.cyan)
                         }
-                        .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06)
+                        .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06, scale: layoutScale)
 
                         if !viewModel.isHardcoreMode {
                             Spacer()
@@ -396,40 +406,38 @@ struct GameView: View {
                             .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.10, cornerRadius: 12, fillsWidth: false))
                         }
                     }
-                    .padding(.horizontal, 30)
-                    .padding(.vertical, 4)
-
+                    .padding(.horizontal, 16 * layoutScale)
                     Spacer(minLength: sectionGap)
                     
                     GeometryReader { geometry in
                         let availableWidth = geometry.size.width
-                        let cardWidth = min(availableWidth * 0.35, safeAreaGeometry.size.height * 0.2)
+                        let cardWidth = max(min(availableWidth * 0.36, safeAreaGeometry.size.height * 0.28), 100)
                         
-                        HStack(spacing: 12) {
+                        HStack(spacing: 12 * layoutScale) {
                             Spacer()
-                            cardStack(imageName: viewModel.playerCard, rotation: playerRotation, accent: CyberpunkTheme.cyan, maxWidth: cardWidth)
+                            cardStack(imageName: viewModel.playerCard, rotation: playerRotation, accent: CyberpunkTheme.cyan, maxWidth: cardWidth, layoutScale: layoutScale)
                             
                             Spacer()
 
-                            cardStack(imageName: viewModel.computerCard, rotation: computerRotation, accent: CyberpunkTheme.magenta, maxWidth: cardWidth)
+                            cardStack(imageName: viewModel.computerCard, rotation: computerRotation, accent: CyberpunkTheme.magenta, maxWidth: cardWidth, layoutScale: layoutScale)
                             
                             Spacer()
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 8 * layoutScale)
+                        .padding(.vertical, 4 * layoutScale)
                     }
-                    .frame(height: safeAreaGeometry.size.height * 0.32)
+                    .frame(height: safeAreaGeometry.size.height * 0.28)
 
                     Spacer(minLength: sectionGap)
                     
                     if viewModel.waitingForGuess {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 8 * layoutScale) {
                             Button {
                                 handleGuess(.lower)
                             } label: {
                                 Text("LOWER")
                             }
-                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true))
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true, scale: layoutScale))
                             .keyboardShortcut(.leftArrow, modifiers: [])
                             .accessibilityIdentifier("lowerButton")
                             
@@ -438,7 +446,7 @@ struct GameView: View {
                             } label: {
                                 Text("EQUAL")
                             }
-                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.11, cornerRadius: 12, fillsWidth: true))
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.11, cornerRadius: 12, fillsWidth: true, scale: layoutScale))
                             .keyboardShortcut(.downArrow, modifiers: [])
                             .accessibilityIdentifier("equalButton")
                             
@@ -447,11 +455,11 @@ struct GameView: View {
                             } label: {
                                 Text("HIGHER")
                             }
-                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true))
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 12, fillsWidth: true, scale: layoutScale))
                             .keyboardShortcut(.rightArrow, modifiers: [])
                             .accessibilityIdentifier("higherButton")
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 16 * layoutScale)
                         .padding(.vertical, sectionGap)
                     } else {
                         Button {
@@ -468,23 +476,23 @@ struct GameView: View {
                         } label: {
                             Label("DEAL", systemImage: "bolt.fill")
                         }
-                        .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.16, cornerRadius: 16, fillsWidth: true))
+                        .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.16, cornerRadius: 16, fillsWidth: true, scale: layoutScale))
                         .accessibilityIdentifier("dealButton")
                         .accessibilityLabel("Deal")
                         .keyboardShortcut(.space, modifiers: [])
-                        .padding(.horizontal, 16)
+                        .frame(width: max(240, safeAreaGeometry.size.width * 0.5))
                         .padding(.vertical, sectionGap)
                     }
 
                     Spacer(minLength: sectionGap)
                     
-                    HStack(spacing: 12) {
-                        VStack(spacing: 6) {
+                    HStack(spacing: 12 * layoutScale) {
+                        VStack(spacing: 6 * layoutScale) {
                             Text("Player")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(CyberpunkTheme.textSecondary)
                             Text("\(viewModel.playerScore)")
-                                .font(.system(size: min(30, safeAreaGeometry.size.height * 0.07), weight: .bold, design: .rounded))
+                                .font(.system(size: safeAreaGeometry.size.height * 0.06 * layoutScale, weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.cyan)
                                 .scaleEffect(playerScaleEffect)
@@ -492,17 +500,17 @@ struct GameView: View {
                                     triggerScoreAnimation(scale: $playerScaleEffect)
                                 }
                         }
-                        .frame(maxWidth: .infinity)
-                        .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06)
+                        .frame(maxWidth: min(300, safeAreaGeometry.size.width * 0.46))
+                        .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.06, scale: layoutScale)
 
                         Spacer()
 
-                        VStack(spacing: 6) {
+                        VStack(spacing: 6 * layoutScale) {
                             Text("Computer")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(CyberpunkTheme.textSecondary)
                             Text("\(viewModel.computerScore)")
-                                .font(.system(size: min(30, safeAreaGeometry.size.height * 0.07), weight: .bold, design: .rounded))
+                                .font(.system(size: safeAreaGeometry.size.height * 0.06 * layoutScale, weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(CyberpunkTheme.magenta)
                                 .scaleEffect(computerScaleEffect)
@@ -510,11 +518,10 @@ struct GameView: View {
                                     triggerScoreAnimation(scale: $computerScaleEffect)
                                 }
                         }
-                        .frame(maxWidth: .infinity)
-                        .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.06)
+                        .frame(maxWidth: min(300, safeAreaGeometry.size.width * 0.46))
+                        .cyberPanel(accent: CyberpunkTheme.magenta, fillOpacity: 0.06, scale: layoutScale)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, sectionGap * 0.5)
+                    .padding(.horizontal, 16 * layoutScale)
 
                     Spacer(minLength: sectionGap)
                 }

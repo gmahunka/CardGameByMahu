@@ -118,7 +118,7 @@ struct CardGameByMahuApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(navigation: appNavigation)
-                .frame(minWidth: 400, idealWidth: 900, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
+                .frame(minWidth: 350, idealWidth: 900, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
         }
         .windowResizability(.contentSize)
         .modelContainer(container)
