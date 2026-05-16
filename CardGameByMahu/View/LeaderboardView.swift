@@ -138,6 +138,12 @@ struct LeaderboardView: View {
                             .padding(.vertical, 6)
                             .listRowBackground(Color.black.opacity(0.22))
                         }
+                        .onDelete { indexSet in
+                            guard let idx = indexSet.first else { return }
+                            let entries = Array(sortedResults.enumerated())
+                            let toDelete = entries[idx].element
+                            resultToDelete = toDelete
+                        }
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
