@@ -36,7 +36,6 @@ struct HistoryView: View {
                         Text("Match History")
                             .font(.largeTitle.weight(.heavy))
                             .foregroundStyle(CyberpunkTheme.textPrimary)
-                        Spacer()
                         if !history.isEmpty {
                             Button(action: {
                                 let result = viewModel.clearAllHistory(modelContext: modelContext)
