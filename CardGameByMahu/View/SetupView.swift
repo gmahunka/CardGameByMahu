@@ -28,14 +28,18 @@ struct SetupView: View {
                 }
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
 
-                Button(action: {
-                    viewModel.resetToRegularDeck()
-                }) {
-                    Label("Regular Deck (4 of each)", systemImage: "suit.spade.fill")
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        viewModel.resetToRegularDeck()
+                    }) {
+                        Label("Regular Deck (4 of each)", systemImage: "suit.spade.fill")
+                    }
+                    .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 14, fillsWidth: false))
+                    .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
+                    .accessibilityLabel("Regular Deck")
+                    Spacer()
                 }
-                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 14, fillsWidth: true))
-                .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
-                .accessibilityLabel("Regular Deck")
                 .padding(.horizontal)
 
                 GeometryReader { geometry in
@@ -110,15 +114,19 @@ struct SetupView: View {
                 }
                 .frame(maxHeight: .infinity)
 
-                Button(action: {
-                    NSApp.keyWindow?.makeFirstResponder(nil)
-                    onApply()
-                }) {
-                    Label("Save & Apply", systemImage: "checkmark.circle.fill")
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        NSApp.keyWindow?.makeFirstResponder(nil)
+                        onApply()
+                    }) {
+                        Label("Save & Apply", systemImage: "checkmark.circle.fill")
+                    }
+                    .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: false))
+                    .accessibilityIdentifier("saveApplyButton")
+                    .accessibilityLabel("Save & Apply")
+                    Spacer()
                 }
-                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: true))
-                .accessibilityIdentifier("saveApplyButton")
-                .accessibilityLabel("Save & Apply")
                 .padding()
             }
         }
