@@ -50,6 +50,7 @@ struct LeaderboardView: View {
                         .foregroundStyle(CyberpunkTheme.textPrimary)
                 }
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
+                .padding(.horizontal)
 
                 HStack(spacing: 12) {
                     Picker("Sort by:", selection: $sortOption) {
@@ -78,6 +79,7 @@ struct LeaderboardView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.04)
+                    .padding(.horizontal)
                 } else {
                     List {
                         ForEach(Array(sortedResults.enumerated()), id: \.element.id) { index, result in
@@ -148,10 +150,10 @@ struct LeaderboardView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
+                    .padding(.horizontal)
                 }
             }
         }
-        .padding(.horizontal)
         .alert("Delete Entry?", isPresented: .constant(resultToDelete != nil)) {
             Button("Cancel", role: .cancel) {
                 resultToDelete = nil
