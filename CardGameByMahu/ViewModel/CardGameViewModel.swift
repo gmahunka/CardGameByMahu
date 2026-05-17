@@ -301,6 +301,8 @@ final class CardGameViewModel {
         hardCoreGameViewModel.start(with: context, playerScoreRecord: scoreRecord)
         
         // Reset UI state
+        playerScore = 0
+        computerScore = 0
         computerCard = "back"
         playerCard = "back"
         waitingForGuess = false
