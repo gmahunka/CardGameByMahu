@@ -32,59 +32,7 @@ struct SetupView: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount), spacing: spacing) {
                             ForEach(viewModel.cardConfigs) { config in
-                                VStack(alignment: .center, spacing: 8) {
-                                    Image("card\(config.id)")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(height: 100)
-                                        .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 8)
-
-                                    HStack(alignment: .center, spacing: 8) {
-                                        Button(action: {
-                                            viewModel.decreaseCount(for: config.id)
-                                        }) {
-                                            Image(systemName: "minus.circle.fill")
-                                                .font(.system(size: 20, weight: .semibold))
-                                                .frame(width: 32, height: 32)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                        .foregroundStyle(CyberpunkTheme.magenta)
-                                        .accessibilityLabel("Decrease quantity")
-
-                                        TextField(
-                                            "Count",
-                                            value: Binding(
-                                                get: { config.count },
-                                                set: { newValue in
-                                                    viewModel.updateCount(config.id, count: newValue)
-                                                }
-                                            ),
-                                            format: .number
-                                        )
-                                        .textFieldStyle(.roundedBorder)
-                                        .frame(width: 50)
-                                        .multilineTextAlignment(.center)
-
-                                        Button(action: {
-                                            viewModel.increaseCount(for: config.id)
-                                        }) {
-                                            Image(systemName: "plus.circle.fill")
-                                                .font(.system(size: 20, weight: .semibold))
-                                                .frame(width: 32, height: 32)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                        .foregroundStyle(CyberpunkTheme.cyan)
-                                        .accessibilityLabel("Increase quantity")
-                                    }
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(10)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.black.opacity(0.24))
-                                )
+                                CardConfigItemView(config: config, viewModel: viewModel)
                             }
                         }
                         .padding(16)
@@ -171,4 +119,90 @@ struct SetupView: View {
         }
     }
 }
+
+struct CardConfigItemView: View {
+    let config: CardConfiguration
+    var viewModel: SetupViewModel
+    
+    @State private var scaleEffect: CGFloat = 1.0
+    
+    private func triggerAnimation() {
+        withAnimation(.easeInOut(duration: 0.6)) {
+            scaleEffect = 1.3
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                scaleEffect = 1.0
+            }
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .center, spacing: 8) {
+            Image("card\(config.id)")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 100)
+                .shadow(color: CyberpunkTheme.cyan.opacity(0.15), radius: 8)
+
+            HStack(alignment: .center, spacing: 8) {
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        viewModel.decreaseCount(for: config.id)
+                    }
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(CyberpunkTheme.magenta)
+                .accessibilityLabel("Decrease quantity")
+
+                TextField(
+                    "Count",
+                    value: Binding(
+                        get: { config.count },
+                        set: { newValue in
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                viewModel.updateCount(config.id, count: newValue)
+                            }
+                        }
+                    ),
+                    format: .number
+                )
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 50)
+                .multilineTextAlignment(.center)
+                .contentTransition(.numericText())
+                .scaleEffect(scaleEffect)
+                .onChange(of: config.count) { _, _ in
+                    triggerAnimation()
+                }
+
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        viewModel.increaseCount(for: config.id)
+                    }
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(CyberpunkTheme.cyan)
+                .accessibilityLabel("Increase quantity")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black.opacity(0.24))
+        )
+    }
+}
+
 
