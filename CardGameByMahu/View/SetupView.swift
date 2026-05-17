@@ -12,45 +12,23 @@ struct SetupView: View {
     @Bindable var viewModel: SetupViewModel
     let onApply: () -> Void
 
+    private let topOverlayHeight: CGFloat = 152
+    private let bottomOverlayHeight: CGFloat = 108
+
     var body: some View {
         ZStack {
             CyberBackdrop()
 
-            VStack(alignment: .center, spacing: 16) {
-                HStack(alignment: .center, spacing: 10) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title)
-                        .foregroundStyle(CyberpunkTheme.cyan)
-                    Text("Game Setup")
-                        .font(.largeTitle.weight(.heavy))
-                        .foregroundStyle(CyberpunkTheme.textPrimary)
-                        .padding(.vertical, 2)
-                }
-                .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
+            GeometryReader { geometry in
+                let availableWidth = geometry.size.width - 32
+                let cardSize: CGFloat = 70
+                let buttonSize: CGFloat = 44
+                let textFieldWidth: CGFloat = 60
+                let spacing: CGFloat = 12
+                let itemWidth = cardSize + spacing + buttonSize + spacing + textFieldWidth + spacing + buttonSize
+                let columnCount = max(1, Int((availableWidth + spacing) / (itemWidth + spacing)))
 
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        viewModel.resetToRegularDeck()
-                    }) {
-                        Label("Regular Deck (4 of each)", systemImage: "suit.spade.fill")
-                    }
-                    .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 14, fillsWidth: false))
-                    .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
-                    .accessibilityLabel("Regular Deck")
-                    Spacer()
-                }
-                .padding(.horizontal)
-
-                GeometryReader { geometry in
-                    let availableWidth = geometry.size.width - 32
-                    let cardSize: CGFloat = 70
-                    let buttonSize: CGFloat = 44
-                    let textFieldWidth: CGFloat = 60
-                    let spacing: CGFloat = 12
-                    let itemWidth = cardSize + spacing + buttonSize + spacing + textFieldWidth + spacing + buttonSize
-                    let columnCount = max(1, Int((availableWidth + spacing) / (itemWidth + spacing)))
-                    
+                ZStack {
                     ScrollView(.vertical, showsIndicators: false) {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount), spacing: spacing) {
                             ForEach(viewModel.cardConfigs) { config in
@@ -110,24 +88,85 @@ struct SetupView: View {
                             }
                         }
                         .padding(16)
+                        .padding(.top, topOverlayHeight)
+                        .padding(.bottom, bottomOverlayHeight)
                     }
-                }
-                .frame(maxHeight: .infinity)
 
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        NSApp.keyWindow?.makeFirstResponder(nil)
-                        onApply()
-                    }) {
-                        Label("Save & Apply", systemImage: "checkmark.circle.fill")
+                    VStack(spacing: 0) {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .frame(height: topOverlayHeight)
+                            .mask(
+                                LinearGradient(
+                                    colors: [.black, .black, .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+
+                        Spacer(minLength: 0)
+
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .frame(height: bottomOverlayHeight)
+                            .mask(
+                                LinearGradient(
+                                    colors: [.clear, .black, .black],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
                     }
-                    .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: false))
-                    .accessibilityIdentifier("saveApplyButton")
-                    .accessibilityLabel("Save & Apply")
-                    Spacer()
+                    .allowsHitTesting(false)
+
+                    VStack(spacing: 0) {
+                        VStack(alignment: .center, spacing: 16) {
+                            HStack(alignment: .center, spacing: 10) {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.title)
+                                    .foregroundStyle(CyberpunkTheme.cyan)
+                                Text("Game Setup")
+                                    .font(.largeTitle.weight(.heavy))
+                                    .foregroundStyle(CyberpunkTheme.textPrimary)
+                                    .padding(.vertical, 2)
+                            }
+                            .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
+
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    viewModel.resetToRegularDeck()
+                                }) {
+                                    Label("Regular Deck (4 of each)", systemImage: "suit.spade.fill")
+                                }
+                                .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.cyan, fillOpacity: 0.12, cornerRadius: 14, fillsWidth: false))
+                                .accessibilityIdentifier("resetDeckOfCardstoRegularButton")
+                                .accessibilityLabel("Regular Deck")
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.top, 16)
+
+                        Spacer(minLength: 0)
+
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                NSApp.keyWindow?.makeFirstResponder(nil)
+                                onApply()
+                            }) {
+                                Label("Save & Apply", systemImage: "checkmark.circle.fill")
+                            }
+                            .buttonStyle(NeonButtonStyle(accent: CyberpunkTheme.magenta, fillOpacity: 0.14, cornerRadius: 14, fillsWidth: false))
+                            .accessibilityIdentifier("saveApplyButton")
+                            .accessibilityLabel("Save & Apply")
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 16)
+                    }
                 }
-                .padding()
             }
         }
     }
