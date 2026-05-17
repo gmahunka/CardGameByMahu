@@ -17,8 +17,6 @@ struct SetupView: View {
 
     var body: some View {
         ZStack {
-            CyberBackdrop()
-
             GeometryReader { geometry in
                 let availableWidth = geometry.size.width - 32
                 let cardSize: CGFloat = 70

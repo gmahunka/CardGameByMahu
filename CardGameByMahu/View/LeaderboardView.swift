@@ -38,8 +38,6 @@ struct LeaderboardView: View {
 
     var body: some View {
         ZStack {
-            CyberBackdrop()
-
             VStack(spacing: 16) {
                 HStack(alignment: .center) {
                     Image(systemName: "trophy.fill")

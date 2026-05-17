@@ -22,8 +22,6 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
-            CyberBackdrop()
-
             GeometryReader { geometry in
                 let contentWidth = max(0, geometry.size.width - 32)
                 let columnCount = max(1, Int((contentWidth + gridSpacing) / (minimumCardWidth + gridSpacing)))

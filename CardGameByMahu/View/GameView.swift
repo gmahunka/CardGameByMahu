@@ -210,8 +210,6 @@ struct GameView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            CyberBackdrop()
-            
             LinearGradient(
                 colors: [Color.black.opacity(0.02),
                          Color.black.opacity(0.18)],

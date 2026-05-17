@@ -26,64 +26,69 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $navigation.selectedTab) {
-            SetupView(viewModel: setupViewModel, onApply: {
-                gameViewModel.resetDeck()
-            })
-            .accessibilityIdentifier("setupTab")
-            .tabItem {
-                Label("Setup", systemImage: "slider.horizontal.3")
-                    .accessibilityIdentifier("setupTab")
-            }
-            .tag(AppTab.setup)
-
-            GameView(viewModel: gameViewModel, touchBarViewModel: touchBarViewModel)
-            .accessibilityIdentifier("playTab")
+        ZStack {
+            CyberBackdrop()
+                .ignoresSafeArea()
+            
+            TabView(selection: $navigation.selectedTab) {
+                SetupView(viewModel: setupViewModel, onApply: {
+                    gameViewModel.resetDeck()
+                })
+                .accessibilityIdentifier("setupTab")
                 .tabItem {
-                    Label("Play", systemImage: "play.circle.fill")
-                    .accessibilityIdentifier("playTab")
+                    Label("Setup", systemImage: "slider.horizontal.3")
+                        .accessibilityIdentifier("setupTab")
                 }
-                .tag(AppTab.play)
-                    
-            HistoryView()
-                .accessibilityIdentifier("historyTab")
-                .tabItem {
-                    Label("History", systemImage: "list.clipboard.fill")
+                .tag(AppTab.setup)
+
+                GameView(viewModel: gameViewModel, touchBarViewModel: touchBarViewModel)
+                .accessibilityIdentifier("playTab")
+                    .tabItem {
+                        Label("Play", systemImage: "play.circle.fill")
+                        .accessibilityIdentifier("playTab")
+                    }
+                    .tag(AppTab.play)
+                        
+                HistoryView()
                     .accessibilityIdentifier("historyTab")
-                }
-                .tag(AppTab.history)
+                    .tabItem {
+                        Label("History", systemImage: "list.clipboard.fill")
+                        .accessibilityIdentifier("historyTab")
+                    }
+                    .tag(AppTab.history)
 
-            LeaderboardView()
-                .accessibilityIdentifier("leaderboardTab")
-                .tabItem {
-                    Label("Leaderboard", systemImage: "trophy.fill")
+                LeaderboardView()
                     .accessibilityIdentifier("leaderboardTab")
-                }
-                .tag(AppTab.leaderboard)
-        }
-        .tabViewStyle(.grouped)
-        .tint(CyberpunkTheme.cyan)
-        .onAppear {
-            guard !didSetupGameContext else {
-                touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
-                return
+                    .tabItem {
+                        Label("Leaderboard", systemImage: "trophy.fill")
+                        .accessibilityIdentifier("leaderboardTab")
+                    }
+                    .tag(AppTab.leaderboard)
             }
+            .tabViewStyle(.automatic)
+            .tint(CyberpunkTheme.cyan)
+            .onAppear {
+                guard !didSetupGameContext else {
+                    touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
+                    return
+                }
 
-            gameViewModel.setupGame(context: modelContext)
-            didSetupGameContext = true
-            touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
-        }
-        .onChange(of: navigation.selectedTab) { _, newValue in
-            touchBarViewModel.setPlayTabVisible(newValue == .play)
-            if newValue == .play {
-                Task { @MainActor in
-                    await Task.yield()
-                    touchBarViewModel.refresh()
+                gameViewModel.setupGame(context: modelContext)
+                didSetupGameContext = true
+                touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
+            }
+            .onChange(of: navigation.selectedTab) { _, newValue in
+                touchBarViewModel.setPlayTabVisible(newValue == .play)
+                if newValue == .play {
+                    Task { @MainActor in
+                        await Task.yield()
+                        touchBarViewModel.refresh()
+                    }
                 }
             }
-        }
-        .onChange(of: gameViewModel.waitingForGuess) { _, _ in
-            touchBarViewModel.refresh()
+            .onChange(of: gameViewModel.waitingForGuess) { _, _ in
+                touchBarViewModel.refresh()
+            }
         }
     }
 }
