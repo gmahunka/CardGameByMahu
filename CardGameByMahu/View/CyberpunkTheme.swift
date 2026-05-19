@@ -16,6 +16,12 @@ enum CyberpunkTheme {
     static let textPrimary = Color.white
     static let textSecondary = Color.white.opacity(0.72)
 
+    // Table styling colors for leaderboard
+    static let rowBackgroundPrimary = Color.white.opacity(0.05)
+    static let rowBackgroundSecondary = Color.white.opacity(0.08)
+    static let tableHeaderFill = Color.white.opacity(0.08)
+    static let tableRowHoverHighlight = Color.white.opacity(0.12)
+
     static var backdropGradient: LinearGradient {
         LinearGradient(
             colors: [Color.black.opacity(0.96), background, Color.black.opacity(0.98)],

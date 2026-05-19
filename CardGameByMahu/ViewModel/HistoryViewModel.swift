@@ -2,11 +2,20 @@ import Foundation
 import SwiftUI
 import SwiftData
 
+@Observable
 final class HistoryViewModel {
+    enum LeaderboardSortOption: Equatable {
+        case score
+        case accuracy
+        case time
+    }
     enum ClearHistoryResult {
         case success
         case failure(String)
     }
+
+    var leaderboardSortOption: LeaderboardSortOption = .score
+    var leaderboardSortDirection: Bool = true // true = descending for score/accuracy, ascending for time
 
     struct RowViewData: Identifiable {
         let id: UUID
@@ -69,6 +78,37 @@ final class HistoryViewModel {
                 ? (isCorrectAnswer ? .green : .red)
                 : Color.gray.opacity(0.2)
         )
+    }
+
+    // MARK: - Leaderboard Sorting
+
+    func toggleLeaderboardSort(by newOption: LeaderboardSortOption) {
+        if leaderboardSortOption == newOption {
+            // Same column clicked - toggle direction
+            leaderboardSortDirection.toggle()
+        } else {
+            // Different column clicked - set to appropriate default direction
+            leaderboardSortOption = newOption
+            leaderboardSortDirection = true // descending for score/accuracy, ascending for time is handled in sort
+        }
+    }
+
+    func sortedLeaderboardResults(_ results: [HardcoreResult]) -> [HardcoreResult] {
+        switch leaderboardSortOption {
+        case .score:
+            return leaderboardSortDirection
+                ? results.sorted { $0.scoreReached > $1.scoreReached }
+                : results.sorted { $0.scoreReached < $1.scoreReached }
+        case .accuracy:
+            return leaderboardSortDirection
+                ? results.sorted { $0.accuracy > $1.accuracy }
+                : results.sorted { $0.accuracy < $1.accuracy }
+        case .time:
+            // Time: ascending (lower time = faster) is the default
+            return !leaderboardSortDirection
+                ? results.sorted { $0.timeTaken < $1.timeTaken }
+                : results.sorted { $0.timeTaken > $1.timeTaken }
+        }
     }
 
     @discardableResult
