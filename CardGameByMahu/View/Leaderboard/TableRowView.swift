@@ -13,8 +13,6 @@ struct TableRowView: View {
     let isAlternate: Bool
     let availableWidth: CGFloat
     let onDelete: (HardcoreResult) -> Void
-    
-    @State private var isHovering = false
 
     private var tableSpacing: CGFloat {
         LeaderboardResponsiveMetrics.spacing(
@@ -114,7 +112,6 @@ struct TableRowView: View {
     
     var body: some View {
         HStack(spacing: tableSpacing) {
-            // Rank column
             Text("#\(rank)")
                 .font(.system(size: rankFontSize, weight: .semibold, design: .rounded))
                 .frame(width: rankColumnWidth, alignment: .center)
@@ -122,7 +119,6 @@ struct TableRowView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
-            // Score column
             Text("\(result.scoreReached)")
                 .font(.system(size: primaryFontSize, weight: .semibold, design: .rounded))
                 .frame(width: scoreColumnWidth, alignment: .trailing)
@@ -130,7 +126,6 @@ struct TableRowView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
-            // Accuracy column
             Text(String(format: "%.1f%%", result.accuracy * 100))
                 .font(.system(size: primaryFontSize, weight: .semibold, design: .rounded))
                 .frame(width: accuracyColumnWidth, alignment: .trailing)
@@ -138,7 +133,6 @@ struct TableRowView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
-            // Time column
             Text(String(format: "%.1fs", result.timeTaken))
                 .font(.system(size: primaryFontSize, weight: .semibold, design: .rounded))
                 .frame(width: timeColumnWidth, alignment: .trailing)
@@ -146,7 +140,6 @@ struct TableRowView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
-            // Date/Time column
             Text(result.date, format: .dateTime.year().month().day().hour().minute())
                 .font(.system(size: dateFontSize, weight: .regular, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -154,7 +147,6 @@ struct TableRowView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
-            // Actions column
             Button(action: { onDelete(result) }) {
                 Image(systemName: "trash.fill")
                     .font(.system(size: deleteIconSize, weight: .semibold))
@@ -162,31 +154,31 @@ struct TableRowView: View {
             }
             .buttonStyle(.plain)
             .frame(width: actionsColumnWidth, alignment: .center)
-            .opacity(isHovering ? 1.0 : 0.6)
+            .opacity(0.6)
             
             Spacer().frame(width: 0)
         }
         .padding(.vertical, verticalPadding)
         .padding(.horizontal, horizontalPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            isHovering
-                ? CyberpunkTheme.tableRowHoverHighlight
-                : (isAlternate ? CyberpunkTheme.rowBackgroundSecondary : CyberpunkTheme.rowBackgroundPrimary)
+            isAlternate ? CyberpunkTheme.rowBackgroundSecondary : CyberpunkTheme.rowBackgroundPrimary
         )
         .overlay(alignment: .bottom) {
             Divider()
                 .background(CyberpunkTheme.panelStroke.opacity(0.5))
         }
         .contentShape(Rectangle())
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isHovering = hovering
-            }
-        }
         .contextMenu {
             Button(role: .destructive, action: { onDelete(result) }) {
                 Label("Delete", systemImage: "trash.fill")
             }
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive, action: { onDelete(result) }) {
+                Text("Delete")
+            }
+            .tint(.red)
         }
     }
 }

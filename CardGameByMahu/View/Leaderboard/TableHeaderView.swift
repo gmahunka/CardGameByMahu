@@ -94,30 +94,24 @@ struct TableHeaderView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: tableSpacing) {
-                // Rank column
                 headerCell(label: "RANK", width: rankColumnWidth, alignment: .center)
-                
-                // Score column
+
                 headerCellButton(label: "SCORE", width: scoreColumnWidth, alignment: .trailing, isActive: viewModel.leaderboardSortOption == .score) {
                     viewModel.toggleLeaderboardSort(by: .score)
                 }
-                
-                // Accuracy column
+
                 headerCellButton(label: "ACCURACY", width: accuracyColumnWidth, alignment: .trailing, isActive: viewModel.leaderboardSortOption == .accuracy) {
                     viewModel.toggleLeaderboardSort(by: .accuracy)
                 }
-                
-                // Time column
+
                 headerCellButton(label: "TIME", width: timeColumnWidth, alignment: .trailing, isActive: viewModel.leaderboardSortOption == .time) {
                     viewModel.toggleLeaderboardSort(by: .time)
                 }
-                
-                // Date/Time column
+
                 headerCell(label: "DATE", width: nil, alignment: .leading)
-                
-                // Actions column
+
                 headerCell(label: "ACTIONS", width: actionsColumnWidth, alignment: .center)
-                
+
                 Spacer().frame(width: 0)
             }
             .padding(.vertical, verticalPadding)
@@ -171,13 +165,6 @@ struct TableHeaderView: View {
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
-        .onHover { isHovering in
-            if isHovering {
-                NSCursor.pointingHand.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
     }
 }
 

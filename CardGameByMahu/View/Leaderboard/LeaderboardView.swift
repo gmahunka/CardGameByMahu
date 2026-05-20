@@ -34,9 +34,7 @@ struct LeaderboardView: View {
                     .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.05)
                     .padding(.horizontal)
 
-                    // Responsive layout: desktop table vs mobile cards
                     if geometry.size.width > LeaderboardResponsiveMetrics.desktopBreakpoint {
-                        // Desktop: Table layout
                         LeaderboardTableView(
                             viewModel: viewModel,
                             results: results,
@@ -47,14 +45,20 @@ struct LeaderboardView: View {
                         )
                         .padding(.horizontal)
                     } else {
-                        // Mobile: Card layout
                         mobileLayout
                     }
                     
                     Spacer()
                 }
             }
-            .alert("Delete Entry?", isPresented: .constant(resultToDelete != nil)) {
+            .alert("Delete Entry?", isPresented: Binding(
+                get: { resultToDelete != nil },
+                set: { shouldPresent in
+                    if !shouldPresent {
+                        resultToDelete = nil
+                    }
+                }
+            )) {
                 Button("Cancel", role: .cancel) {
                     resultToDelete = nil
                 }

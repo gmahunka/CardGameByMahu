@@ -36,24 +36,27 @@ struct LeaderboardTableView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.vertical, 32)
             } else {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(Array(sortedResults.enumerated()), id: \.element.id) { index, result in
-                            TableRowView(
-                                result: result,
-                                rank: index + 1,
-                                isAlternate: index % 2 == 1,
-                                availableWidth: availableWidth,
-                                onDelete: onDelete
-                            )
-                        }
+                List {
+                    ForEach(Array(sortedResults.enumerated()), id: \.element.id) { index, result in
+                        TableRowView(
+                            result: result,
+                            rank: index + 1,
+                            isAlternate: index % 2 == 1,
+                            availableWidth: availableWidth,
+                            onDelete: onDelete
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
                 }
-                .scrollIndicators(.hidden)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
             }
         }
         .background(CyberpunkTheme.background)
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(CyberpunkTheme.panelStroke, lineWidth: 0.5)
