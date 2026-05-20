@@ -57,7 +57,7 @@ final class CardGameByMahuUITests: XCTestCase {
     func testSetupTab() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["Setup"]/*[[".tabGroups",".tabs[\"Setup\"]",".tabs[\"slider.horizontal.3\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[1]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["Setup"]/*[[".tabGroups",".radioButtons[\"Setup\"]",".radioButtons[\"slider.horizontal.3\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[1]]@END_MENU_TOKEN@*/.firstMatch.click()
         
         let minusButtons = app.buttons.matching(identifier: "minus.circle.fill")
         let plusButtons = app.buttons.matching(identifier: "plus.circle.fill")
@@ -92,22 +92,22 @@ final class CardGameByMahuUITests: XCTestCase {
     func testTabs() {
         let app = XCUIApplication()
         app.activate()
-        let element = app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch
+        let element = app/*@START_MENU_TOKEN@*/.radioButtons["playTab"]/*[[".tabGroups",".radioButtons[\"Play\"]",".radioButtons[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch
         element.click()
         
-        let element2 = app/*@START_MENU_TOKEN@*/.tabs["historyTab"]/*[[".tabGroups",".tabs[\"History\"]",".tabs[\"historyTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch
+        let element2 = app/*@START_MENU_TOKEN@*/.radioButtons["historyTab"]/*[[".tabGroups",".radioButtons[\"History\"]",".radioButtons[\"historyTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch
         element2.click()
-        app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["leaderboardTab"]/*[[".tabGroups",".radioButtons[\"Leaderboard\"]",".radioButtons[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         element2.click()
         element.click()
-        app/*@START_MENU_TOKEN@*/.tabs["setupTab"]/*[[".tabGroups",".tabs[\"Setup\"]",".tabs[\"setupTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["setupTab"]/*[[".tabGroups",".radioButtons[\"Setup\"]",".radioButtons[\"setupTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
     }
     
     func testPlayGame() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["playTab"]/*[[".tabGroups",".radioButtons[\"Play\"]",".radioButtons[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
         let element = app.buttons["dealButton"].firstMatch
         
@@ -126,14 +126,14 @@ final class CardGameByMahuUITests: XCTestCase {
         let lower = app.buttons["lowerButton"].firstMatch
         lower.click()
         
-        app.tabs["historyTab"].firstMatch.click()
+        app.radioButtons["historyTab"].firstMatch.click()
         
     }
     
     func testInfoPanel() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["playTab"]/*[[".tabGroups",".radioButtons[\"Play\"]",".radioButtons[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
         let infoButton = app.buttons["showRulesButton"].firstMatch
         infoButton.click()
@@ -144,7 +144,7 @@ final class CardGameByMahuUITests: XCTestCase {
     func testTooFewCardsRemain() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["playTab"]/*[[".tabGroups",".radioButtons[\"Play\"]",".radioButtons[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
 
         for _ in 0..<26 {
             app.buttons["dealButton"].firstMatch.click()
@@ -161,18 +161,23 @@ final class CardGameByMahuUITests: XCTestCase {
     func testHardcoreQuit() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["playTab"]/*[[".tabGroups",".radioButtons[\"Play\"]",".radioButtons[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         app.buttons["hardcoreModeButton"].firstMatch.click()
         app.buttons["dealButton"].firstMatch.click()
         app.buttons["equalButton"].firstMatch.click()
         app.buttons["quitHardcoreButton"].firstMatch.click()
         
+        app/*@START_MENU_TOKEN@*/.radioButtons["leaderboardTab"]/*[[".radioGroups",".radioButtons[\"Leaderboard\"]",".radioButtons[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        
+        let element = app/*@START_MENU_TOKEN@*/.buttons["SCORE"]/*[[".groups.buttons[\"SCORE\"]",".buttons[\"SCORE\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.firstMatch
+        element.click()
+        element.click()
     }
     
     func testHardcoreExit() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["playTab"]/*[[".tabGroups",".radioButtons[\"Play\"]",".radioButtons[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         app.buttons["hardcoreModeButton"].firstMatch.click()
         for _ in 0..<26 {
             app.buttons["dealButton"].firstMatch.click()
@@ -186,8 +191,8 @@ final class CardGameByMahuUITests: XCTestCase {
         app.buttons["dealButton"].firstMatch.click()
         app.buttons["quitHardcoreButtonAfterFinish"].firstMatch.click()
         
-        app.tabs["historyTab"].firstMatch.click()
-        app/*@START_MENU_TOKEN@*/.tabs["leaderboardTab"]/*[[".tabGroups",".tabs[\"Leaderboard\"]",".tabs[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.radioButtons["historyTab"].firstMatch.click()
+        app/*@START_MENU_TOKEN@*/.radioButtons["leaderboardTab"]/*[[".tabGroups",".radioButtons[\"Leaderboard\"]",".radioButtons[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
         app.radioButtons["sortByScoreButton"].firstMatch.click()
         app.radioButtons["sortByAccuracyButton"].firstMatch.click()
@@ -202,7 +207,7 @@ final class CardGameByMahuUITests: XCTestCase {
     func testVoiceCommandToggle() {
         let app = XCUIApplication()
         app.activate()
-        app/*@START_MENU_TOKEN@*/.tabs["playTab"]/*[[".tabGroups",".tabs[\"Play\"]",".tabs[\"playTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
+        app.radioButtons["playTab"].firstMatch.click()
         app/*@START_MENU_TOKEN@*/.buttons["voiceCommandToggle"]/*[[".scrollViews",".buttons[\"Enable Voice Commands\"]",".buttons[\"voiceCommandToggle\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         app/*@START_MENU_TOKEN@*/.buttons["action-button-1"]/*[[".sheets[\"_NS:87\"].buttons",".sheets",".buttons[\"Enable\"]",".buttons[\"action-button-1\"]"],[[[-1,3],[-1,1,1],[-1,0]],[[-1,3],[-1,2]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
