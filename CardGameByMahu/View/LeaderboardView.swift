@@ -13,9 +13,6 @@ struct LeaderboardView: View {
     @State private var viewModel = HistoryViewModel()
     @State private var resultToDelete: HardcoreResult?
     
-    // Responsive layout breakpoint: <= 700pt = mobile, > 700pt = desktop
-    let desktopBreakpoint: CGFloat = 650
-    
     @Query(sort: [
         SortDescriptor(\HardcoreResult.scoreReached, order: .reverse),
         SortDescriptor(\HardcoreResult.accuracy, order: .reverse),
@@ -38,11 +35,12 @@ struct LeaderboardView: View {
                     .padding(.horizontal)
 
                     // Responsive layout: desktop table vs mobile cards
-                    if geometry.size.width > desktopBreakpoint {
+                    if geometry.size.width > LeaderboardResponsiveMetrics.desktopBreakpoint {
                         // Desktop: Table layout
                         LeaderboardTableView(
                             viewModel: viewModel,
                             results: results,
+                            availableWidth: geometry.size.width,
                             onDelete: { result in
                                 resultToDelete = result
                             }

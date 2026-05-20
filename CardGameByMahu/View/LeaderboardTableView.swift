@@ -10,6 +10,7 @@ import SwiftUI
 struct LeaderboardTableView: View {
     var viewModel: HistoryViewModel
     let results: [HardcoreResult]
+    let availableWidth: CGFloat
     let onDelete: (HardcoreResult) -> Void
     
     var sortedResults: [HardcoreResult] {
@@ -18,7 +19,7 @@ struct LeaderboardTableView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            TableHeaderView(viewModel: viewModel)
+            TableHeaderView(viewModel: viewModel, availableWidth: availableWidth)
             
             if sortedResults.isEmpty {
                 VStack(spacing: 12) {
@@ -42,6 +43,7 @@ struct LeaderboardTableView: View {
                                 result: result,
                                 rank: index + 1,
                                 isAlternate: index % 2 == 1,
+                                availableWidth: availableWidth,
                                 onDelete: onDelete
                             )
                         }
@@ -70,6 +72,7 @@ struct LeaderboardTableView: View {
     LeaderboardTableView(
         viewModel: viewModel,
         results: results,
+        availableWidth: 900,
         onDelete: { _ in }
     )
     .padding()

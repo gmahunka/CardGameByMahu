@@ -11,56 +11,163 @@ struct TableRowView: View {
     let result: HardcoreResult
     let rank: Int
     let isAlternate: Bool
+    let availableWidth: CGFloat
     let onDelete: (HardcoreResult) -> Void
     
     @State private var isHovering = false
+
+    private var tableSpacing: CGFloat {
+        LeaderboardResponsiveMetrics.spacing(
+            base: LeaderboardResponsiveMetrics.tableSpacing,
+            max: LeaderboardResponsiveMetrics.tableSpacingMax,
+            width: availableWidth
+        )
+    }
+
+    private var horizontalPadding: CGFloat {
+        LeaderboardResponsiveMetrics.padding(
+            base: LeaderboardResponsiveMetrics.rowHorizontalPadding,
+            max: LeaderboardResponsiveMetrics.rowHorizontalPaddingMax,
+            width: availableWidth
+        )
+    }
+
+    private var verticalPadding: CGFloat {
+        LeaderboardResponsiveMetrics.padding(
+            base: LeaderboardResponsiveMetrics.rowVerticalPadding,
+            max: LeaderboardResponsiveMetrics.rowVerticalPaddingMax,
+            width: availableWidth
+        )
+    }
+
+    private var rankColumnWidth: CGFloat {
+        LeaderboardResponsiveMetrics.columnWidth(
+            base: LeaderboardResponsiveMetrics.rankColumnWidth,
+            max: LeaderboardResponsiveMetrics.rankColumnWidthMax,
+            width: availableWidth
+        )
+    }
+
+    private var scoreColumnWidth: CGFloat {
+        LeaderboardResponsiveMetrics.columnWidth(
+            base: LeaderboardResponsiveMetrics.scoreColumnWidth,
+            max: LeaderboardResponsiveMetrics.scoreColumnWidthMax,
+            width: availableWidth
+        )
+    }
+
+    private var accuracyColumnWidth: CGFloat {
+        LeaderboardResponsiveMetrics.columnWidth(
+            base: LeaderboardResponsiveMetrics.accuracyColumnWidth,
+            max: LeaderboardResponsiveMetrics.accuracyColumnWidthMax,
+            width: availableWidth
+        )
+    }
+
+    private var timeColumnWidth: CGFloat {
+        LeaderboardResponsiveMetrics.columnWidth(
+            base: LeaderboardResponsiveMetrics.timeColumnWidth,
+            max: LeaderboardResponsiveMetrics.timeColumnWidthMax,
+            width: availableWidth
+        )
+    }
+
+    private var actionsColumnWidth: CGFloat {
+        LeaderboardResponsiveMetrics.columnWidth(
+            base: LeaderboardResponsiveMetrics.actionsColumnWidth,
+            max: LeaderboardResponsiveMetrics.actionsColumnWidthMax,
+            width: availableWidth
+        )
+    }
+
+    private var rankFontSize: CGFloat {
+        LeaderboardResponsiveMetrics.fontSize(
+            base: LeaderboardResponsiveMetrics.rowPrimaryFontSize,
+            max: LeaderboardResponsiveMetrics.rowPrimaryFontSizeMax,
+            width: availableWidth
+        )
+    }
+
+    private var primaryFontSize: CGFloat {
+        LeaderboardResponsiveMetrics.fontSize(
+            base: LeaderboardResponsiveMetrics.rowSecondaryFontSize,
+            max: LeaderboardResponsiveMetrics.rowSecondaryFontSizeMax,
+            width: availableWidth
+        )
+    }
+
+    private var dateFontSize: CGFloat {
+        LeaderboardResponsiveMetrics.fontSize(
+            base: LeaderboardResponsiveMetrics.dateFontSize,
+            max: LeaderboardResponsiveMetrics.dateFontSizeMax,
+            width: availableWidth
+        )
+    }
+
+    private var deleteIconSize: CGFloat {
+        LeaderboardResponsiveMetrics.fontSize(
+            base: LeaderboardResponsiveMetrics.iconFontSize,
+            max: LeaderboardResponsiveMetrics.iconFontSizeMax,
+            width: availableWidth
+        )
+    }
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: tableSpacing) {
             // Rank column
             Text("#\(rank)")
-                .font(.headline)
-                .frame(width: 60, alignment: .center)
+                .font(.system(size: rankFontSize, weight: .semibold, design: .rounded))
+                .frame(width: rankColumnWidth, alignment: .center)
                 .foregroundStyle(CyberpunkTheme.cyan)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
             // Score column
             Text("\(result.scoreReached)")
-                .font(.subheadline)
-                .frame(width: 80, alignment: .trailing)
+                .font(.system(size: primaryFontSize, weight: .semibold, design: .rounded))
+                .frame(width: scoreColumnWidth, alignment: .trailing)
                 .foregroundStyle(CyberpunkTheme.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
             // Accuracy column
             Text(String(format: "%.1f%%", result.accuracy * 100))
-                .font(.subheadline)
-                .frame(width: 90, alignment: .trailing)
+                .font(.system(size: primaryFontSize, weight: .semibold, design: .rounded))
+                .frame(width: accuracyColumnWidth, alignment: .trailing)
                 .foregroundStyle(CyberpunkTheme.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
             // Time column
             Text(String(format: "%.1fs", result.timeTaken))
-                .font(.subheadline)
-                .frame(width: 80, alignment: .trailing)
+                .font(.system(size: primaryFontSize, weight: .semibold, design: .rounded))
+                .frame(width: timeColumnWidth, alignment: .trailing)
                 .foregroundStyle(CyberpunkTheme.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
             // Date/Time column
             Text(result.date, format: .dateTime.year().month().day().hour().minute())
-                .font(.caption)
+                .font(.system(size: dateFontSize, weight: .regular, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .foregroundStyle(CyberpunkTheme.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
             // Actions column
             Button(action: { onDelete(result) }) {
                 Image(systemName: "trash.fill")
-                    .font(.system(size: 14))
+                    .font(.system(size: deleteIconSize, weight: .semibold))
                     .foregroundStyle(CyberpunkTheme.magenta)
             }
             .buttonStyle(.plain)
-            .frame(width: 60, alignment: .center)
+            .frame(width: actionsColumnWidth, alignment: .center)
             .opacity(isHovering ? 1.0 : 0.6)
             
             Spacer().frame(width: 0)
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 16)
+        .padding(.vertical, verticalPadding)
+        .padding(.horizontal, horizontalPadding)
         .background(
             isHovering
                 ? CyberpunkTheme.tableRowHoverHighlight
@@ -94,12 +201,13 @@ struct TableRowView: View {
     )
     
     VStack {
-        TableHeaderView(viewModel: HistoryViewModel())
+        TableHeaderView(viewModel: HistoryViewModel(), availableWidth: 900)
         
         TableRowView(
             result: result,
             rank: 1,
             isAlternate: false,
+            availableWidth: 900,
             onDelete: { _ in }
         )
         
@@ -107,6 +215,7 @@ struct TableRowView: View {
             result: result,
             rank: 2,
             isAlternate: true,
+            availableWidth: 900,
             onDelete: { _ in }
         )
         
