@@ -19,6 +19,10 @@ struct LeaderboardView: View {
         SortDescriptor(\HardcoreResult.timeTaken, order: .forward)
     ]) private var results: [HardcoreResult]
 
+    private var mobileLeaderboardResults: [HardcoreResult] {
+        viewModel.sortedLeaderboardResults(results)
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -109,10 +113,9 @@ struct LeaderboardView: View {
                 .cyberPanel(accent: CyberpunkTheme.cyan, fillOpacity: 0.04)
                 .padding(.horizontal)
             } else {
-                let sortedResults = viewModel.sortedLeaderboardResults(results)
                 List {
-                    ForEach(sortedResults.indices, id: \.self) { index in
-                        let result = sortedResults[index]
+                    ForEach(mobileLeaderboardResults.indices, id: \.self) { index in
+                        let result = mobileLeaderboardResults[index]
                         HStack(spacing: 12) {
                             Text("#\(index + 1)")
                                 .font(.headline)
@@ -172,7 +175,7 @@ struct LeaderboardView: View {
                     }
                     .onDelete { indexSet in
                         for idx in indexSet {
-                            resultToDelete = sortedResults[idx]
+                            resultToDelete = mobileLeaderboardResults[idx]
                         }
                     }
                 }
