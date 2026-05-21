@@ -4,6 +4,11 @@
 //
 //  Created by Gergo Mahunka on 2026. 03. 07..
 //
+//  Purpose: Manages the application's core game state and rules for the
+//  normal (non-hardcore) game mode. Responsibilities include deck and
+//  score management, round flow (draw, guess resolution), and bridging to
+//  the hardcore engine when that mode is started. Keep comments concise —
+//  the implementation should remain authoritative for behavior.
 
 import Foundation
 import Combine
@@ -24,6 +29,11 @@ enum Guess {
     }
 }
 
+/// ViewModel coordinating game state for normal gameplay and delegating
+/// hardcore-mode behavior to `HardCoreGameViewModel` when enabled.
+///
+/// - Note: Use `setupGame(context:)` to attach a `ModelContext` before
+///   invoking gameplay methods that access persistent models.
 @Observable
 @MainActor
 final class CardGameViewModel {
@@ -44,6 +54,9 @@ final class CardGameViewModel {
         let waitingForGuess: Bool
     }
     
+    /// Create a new view model using the provided `DeckSettings`.
+    /// - Parameter deckSettings: Configuration describing how many copies
+    ///   of each card value exist in the deck.
     init(deckSettings: DeckSettings) {
         self.deckSettings = deckSettings
         self.hardCoreGameViewModel = HardCoreGameViewModel(deckSettings: deckSettings)
@@ -160,6 +173,9 @@ final class CardGameViewModel {
         try? context.save()
     }
     
+    /// Draw a random card from the persistent deck and remove it.
+    /// - Returns: The drawn card's integer value, or `nil` if the deck is empty.
+    /// - Important: This mutates persistent state via `ModelContext`.
     private func drawCard() -> Int? {
         guard let context = modelContext else { return nil }
         
@@ -197,6 +213,10 @@ final class CardGameViewModel {
         waitingForGuess = true
     }
     
+    /// Resolve the player's `guess` against a newly drawn player card.
+    /// Updates scores, records the round to history, and forwards
+    /// hardcore-related bookkeeping to the hardcore view model when active.
+    /// - Parameter guess: The player's guessed relation between cards.
     func makeGuess(_ guess: Guess) {
         guard waitingForGuess else { return }
 
@@ -261,6 +281,10 @@ final class CardGameViewModel {
         return .equal
     }
     
+    /// Calculate probabilistic chances for higher/equal/lower given the
+    /// current remaining cards in the deck.
+    /// - Parameter computer: The value of the computer's revealed card.
+    /// - Returns: Tuple of probabilities (higher, equal, lower) in the range 0...1.
     private func calculateChances(for computer: Int) -> (higher: Double, equal: Double, lower: Double) {
         guard let context = modelContext else {
             return (higher: 0, equal: 0, lower: 0)

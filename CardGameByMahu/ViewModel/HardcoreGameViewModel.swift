@@ -4,11 +4,18 @@
 //
 //  Created by Gergo Mahunka on 2026. 03. 23..
 //
+//  Purpose: Implements the "hardcore" gameplay mode with a fixed
+//  52-card deck, timing, and optimal-guess tracking. This engine is
+//  intentionally separated from the normal game logic so the UI can
+//  switch modes without duplicating deck/state handling.
 
 import Foundation
 import SwiftData
 import Observation
 
+/// Engine controlling hardcore-mode timing, guess tracking, and result
+/// persistence. Does not manage UI state — it provides metrics consumed
+/// by `CardGameViewModel` for display and persistence.
 @Observable
 @MainActor
 final class HardCoreGameViewModel {
@@ -29,12 +36,16 @@ final class HardCoreGameViewModel {
         self.deckSettings = deckSettings
     }
     
+    /// Attach the SwiftData `ModelContext` used for persisting results.
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
     }
     
     // MARK: - Public Methods
     
+    /// Start hardcore mode by initializing a standard 52-card deck and
+    /// resetting timers and counters. This will zero any attached
+    /// `playerScoreRecord` so the hardcore session begins fresh.
     func start(with context: ModelContext, playerScoreRecord: GameScore?) {
         self.modelContext = context
         stopTimer()
@@ -69,6 +80,8 @@ final class HardCoreGameViewModel {
         }
     }
     
+    /// Record a single guess and whether it matched the optimal choice.
+    /// Used to compute accuracy at session end.
     func recordGuess(isOptimal: Bool) {
         guessCount += 1
         if isOptimal {
@@ -76,6 +89,8 @@ final class HardCoreGameViewModel {
         }
     }
     
+    /// Complete the hardcore session, persist a `HardcoreResult`, and
+    /// return the computed result for immediate use (e.g., UI summary).
     func finish(playerScore: Int) -> HardcoreResult {
         stopTimer()
         isHardcoreMode = false
@@ -98,6 +113,7 @@ final class HardCoreGameViewModel {
         return result
     }
     
+    /// Abort hardcore mode mid-session and reset internal counters.
     func quit() {
         stopTimer()
         isHardcoreMode = false
@@ -111,6 +127,8 @@ final class HardCoreGameViewModel {
         stopTimer()
     }
     
+    /// Percentage (0-100) of guesses that were optimal during the
+    /// current hardcore session.
     var accuracyPercent: Double {
         guard guessCount > 0 else { return 0 }
         return (Double(optimalGuessCount) / Double(guessCount)) * 100

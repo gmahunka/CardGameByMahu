@@ -4,6 +4,10 @@
 //
 //  Created by Gergo Mahunka on 2026. 03. 09..
 //
+//  Purpose: Primary game UI. Handles user interactions, card flip
+//  animations, and delegates game actions to `CardGameViewModel`.
+//  Keep animation steps compact and deterministic to keep UI tests
+//  predictable.
 
 import SwiftUI
 import SwiftData
@@ -48,6 +52,10 @@ struct GameView: View {
     }
 
     private func cardStack(imageName: String, rotation: Double, accent: Color, maxWidth: CGFloat = 200, layoutScale: CGFloat = 1.0) -> some View {
+        // The visual flip is implemented by swapping opacity around 90°.
+        // We rely on `rotation` to be animated from 0 -> 90 -> 180 for a
+        // single full flip; keep the midpoint swap logic minimal to avoid
+        // timing drift across devices.
         ZStack {
             Image("back")
                 .resizable()
@@ -94,6 +102,8 @@ struct GameView: View {
     }
 
     private func proceedDeal(with phaseDuration: Double) async {
+        // Sequence: hide front -> draw -> reveal. Splitting into an
+        // async function keeps timing deterministic for animations.
         // Flip computer to 90° (hide front)
         withAnimation(.easeInOut(duration: phaseDuration)) {
             computerRotation = 90
@@ -133,6 +143,9 @@ struct GameView: View {
     }
 
     private func handleVoiceCommand(_ command: VoiceCommand) {
+        // Map incoming voice commands to on-screen actions. Provide short
+        // feedback via `showVoiceMessage` for cases where the command is
+        // invalid in the current state.
         switch command {
         case .deal:
             guard !viewModel.waitingForGuess else {
@@ -530,12 +543,15 @@ struct GameView: View {
             }
         }
         .onAppear {
-            viewModel.setupGame(context: context)
-            touchBarViewModel?.setActionHandlers(
-                deal: { startNewRound() },
-                guess: { guess in handleGuess(guess) }
-            )
-            touchBarViewModel?.refresh()
+            Task { @MainActor in
+                await Task.yield()
+                viewModel.setupGame(context: context)
+                touchBarViewModel?.setActionHandlers(
+                    deal: { startNewRound() },
+                    guess: { guess in handleGuess(guess) }
+                )
+                touchBarViewModel?.refresh()
+            }
         }
         .onDisappear {
             roundTask?.cancel()
@@ -545,7 +561,10 @@ struct GameView: View {
             touchBarViewModel?.setActionHandlers(deal: nil, guess: nil)
         }
         .onChange(of: voiceService.statusMessage) { _, newValue in
-            showVoiceMessage(newValue)
+            Task { @MainActor in
+                await Task.yield()
+                showVoiceMessage(newValue)
+            }
         }
         .alert("Out of Cards", isPresented: $viewModel.showReshuffleAlert) {
             Button("Reshuffle Deck", role: .none) {

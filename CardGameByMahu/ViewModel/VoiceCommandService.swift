@@ -4,6 +4,11 @@
 //
 //  Created by Gergo Mahunka on 2026. 04. 27..
 //
+//  Purpose: Provides an encapsulated service for enabling voice
+//  commands using `Speech` and `AVFoundation`. Handles authorization
+//  flows for speech recognition and microphone access, starts/stops
+//  recognition sessions, and debounces parsed commands before
+//  dispatching them to the consumer via a callback.
 
 import Foundation
 import Observation
@@ -55,6 +60,13 @@ struct VoiceCommandParser {
     }
 }
 
+/// Service that manages speech recognition lifecycle and translates
+/// transcripts into `VoiceCommand` values. Consumers should call
+/// `toggle(onCommand:)` to enable/disable and receive command events.
+///
+/// - Entitlements: The app must request Microphone (and optionally
+///   Speech Recognition) permission in the system settings; see
+///   `CardGameByMahu.entitlements` for required entries.
 @MainActor
 @Observable
 final class VoiceCommandService {
@@ -205,6 +217,8 @@ final class VoiceCommandService {
     }
 
     private func handleRecognition(result: SFSpeechRecognitionResult?, error: Error?) {
+        // Dispatch the next detected command, if any. The parser enforces
+        // a small cooldown to avoid repeated events from partial results.
         if let transcript = result?.bestTranscription.formattedString,
            let command = parser.nextCommand(from: transcript) {
             onCommand?(command)

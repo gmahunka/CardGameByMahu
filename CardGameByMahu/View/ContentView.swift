@@ -4,6 +4,10 @@
 //
 //  Created by Gergo Mahunka on 2026. 03. 01..
 //
+//  Purpose: App root view that wires up shared view models and the
+//  SwiftData `ModelContext`. It composes the main tabbed UI and ensures
+//  `CardGameViewModel.setupGame(context:)` is called once the context is
+//  available.
 
 import SwiftUI
 import SwiftData

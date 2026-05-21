@@ -4,9 +4,16 @@
 //
 //  Created by Gergo Mahunka on 2026. 03. 13..
 //
+//  Purpose: Encapsulates configuration for constructing decks. Provides
+//  sensible defaults for a regular deck and enforces value/count
+//  invariants (card values from `minCardValue` to `maxCardValue`, and
+//  counts clamped to 0...`maxCount`).
 import Foundation
 import Observation
 
+/// Configuration object describing how many copies of each card value
+/// should exist when building a deck. Use `resetToRegularDeck()` to
+/// restore a standard 4-per-value deck.
 @Observable
 @MainActor
 final class DeckSettings {
