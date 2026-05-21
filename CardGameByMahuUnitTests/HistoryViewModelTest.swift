@@ -10,6 +10,7 @@ import SwiftData
 import Testing
 @testable import CardGameByMahu
 
+@MainActor
 struct HistoryViewModelTest {
 
     private func makeInMemoryContext() throws -> ModelContext {
