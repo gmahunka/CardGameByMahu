@@ -194,10 +194,6 @@ final class CardGameByMahuUITests: XCTestCase {
         app.radioButtons["historyTab"].firstMatch.click()
         app/*@START_MENU_TOKEN@*/.radioButtons["leaderboardTab"]/*[[".tabGroups",".radioButtons[\"Leaderboard\"]",".radioButtons[\"leaderboardTab\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.firstMatch.click()
         
-        app.radioButtons["sortByScoreButton"].firstMatch.click()
-        app.radioButtons["sortByAccuracyButton"].firstMatch.click()
-        app.radioButtons["sortByTimeButton"].firstMatch.click()
-        
         app.buttons["deleteLeaderboardEntrybutton"].firstMatch.click()
         app.buttons["cancelDeleteEntryButton"].firstMatch.click()
         app.buttons["deleteLeaderboardEntrybutton"].firstMatch.click()

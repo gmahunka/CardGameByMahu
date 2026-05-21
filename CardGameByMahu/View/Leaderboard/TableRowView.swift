@@ -152,6 +152,7 @@ struct TableRowView: View {
                     .font(.system(size: deleteIconSize, weight: .semibold))
                     .foregroundStyle(CyberpunkTheme.magenta)
             }
+            .accessibilityIdentifier("deleteLeaderboardEntrybutton")
             .buttonStyle(.plain)
             .frame(width: actionsColumnWidth, alignment: .center)
             .opacity(0.6)

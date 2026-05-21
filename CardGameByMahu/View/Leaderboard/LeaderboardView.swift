@@ -166,9 +166,9 @@ struct LeaderboardView: View {
                                     .font(.system(size: 14))
                                     .foregroundStyle(CyberpunkTheme.magenta)
                             }
+                            .accessibilityIdentifier("deleteLeaderboardEntrybutton")
                             .buttonStyle(.plain)
                         }
-                        .accessibilityIdentifier("deleteLeaderboardEntrybutton")
                         .padding(.vertical, 6)
                         .listRowBackground(Color.black.opacity(0.22))
                     }
