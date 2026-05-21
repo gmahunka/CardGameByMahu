@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LeaderboardTableView: View {
-    var viewModel: HistoryViewModel
+    @Bindable var viewModel: HistoryViewModel
     let results: [HardcoreResult]
     let availableWidth: CGFloat
     let onDelete: (HardcoreResult) -> Void

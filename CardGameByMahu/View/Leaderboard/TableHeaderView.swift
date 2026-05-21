@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TableHeaderView: View {
-    var viewModel: HistoryViewModel
+    @Bindable var viewModel: HistoryViewModel
     let availableWidth: CGFloat
 
     private var tableSpacing: CGFloat {

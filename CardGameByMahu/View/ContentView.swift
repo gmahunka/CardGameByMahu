@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var touchBarViewModel: TouchBarViewModel
     @State private var didSetupGameContext = false
 
+    @MainActor
     init(navigation: AppNavigationModel = AppNavigationModel()) {
         _navigation = ObservedObject(wrappedValue: navigation)
         let sharedDeckSettings = DeckSettings()
@@ -30,7 +31,7 @@ struct ContentView: View {
             CyberBackdrop()
                 .ignoresSafeArea()
             
-            TabView(selection: $navigation.selectedTab) {
+            TabView(selection: selectedTabBinding) {
                 SetupView(viewModel: setupViewModel, onApply: {
                     gameViewModel.resetDeck()
                 })
@@ -68,27 +69,45 @@ struct ContentView: View {
             .tabViewStyle(.automatic)
             .tint(CyberpunkTheme.cyan)
             .onAppear {
-                guard !didSetupGameContext else {
-                    touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
-                    return
-                }
+                Task { @MainActor in
+                    await Task.yield()
 
-                gameViewModel.setupGame(context: modelContext)
-                didSetupGameContext = true
-                touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
+                    guard !didSetupGameContext else {
+                        touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
+                        return
+                    }
+
+                    gameViewModel.setupGame(context: modelContext)
+                    didSetupGameContext = true
+                    touchBarViewModel.setPlayTabVisible(navigation.selectedTab == .play)
+                }
             }
             .onChange(of: navigation.selectedTab) { _, newValue in
-                touchBarViewModel.setPlayTabVisible(newValue == .play)
-                if newValue == .play {
-                    Task { @MainActor in
-                        await Task.yield()
+                Task { @MainActor in
+                    await Task.yield()
+                    touchBarViewModel.setPlayTabVisible(newValue == .play)
+                    if newValue == .play {
                         touchBarViewModel.refresh()
                     }
                 }
             }
             .onChange(of: gameViewModel.waitingForGuess) { _, _ in
-                touchBarViewModel.refresh()
+                Task { @MainActor in
+                    await Task.yield()
+                    touchBarViewModel.refresh()
+                }
             }
         }
+    }
+
+    private var selectedTabBinding: Binding<AppTab> {
+        Binding(
+            get: { navigation.selectedTab },
+            set: { newValue in
+                Task { @MainActor in
+                    navigation.selectedTab = newValue
+                }
+            }
+        )
     }
 }

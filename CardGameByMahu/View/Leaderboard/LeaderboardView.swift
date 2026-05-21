@@ -79,7 +79,9 @@ struct LeaderboardView: View {
     // MARK: - Mobile Layout
     
     private var mobileLayout: some View {
-        VStack(spacing: 12) {
+        @Bindable var viewModel = viewModel
+
+        return VStack(spacing: 12) {
             HStack(spacing: 12) {
                 Picker("Sort by:", selection: $viewModel.leaderboardSortOption) {
                     Text("Score").tag(HistoryViewModel.LeaderboardSortOption.score)

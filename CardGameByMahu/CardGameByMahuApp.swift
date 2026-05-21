@@ -17,8 +17,11 @@ enum AppTab: Hashable {
     case leaderboard
 }
 
+@MainActor
 final class AppNavigationModel: ObservableObject {
     @Published var selectedTab: AppTab = .setup
+
+    nonisolated init() {}
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
