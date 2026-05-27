@@ -29,9 +29,7 @@ final class TouchBarViewModel {
     private var dealHandler: (() -> Void)?
     private var guessHandler: ((Guess) -> Void)?
 
-    var isPlayTabVisible: Bool {
-        didSet { refresh() }
-    }
+    var isPlayTabVisible: Bool
 
     init(
         gameViewModel: CardGameViewModel,
@@ -46,7 +44,9 @@ final class TouchBarViewModel {
     }
 
     func setPlayTabVisible(_ isVisible: Bool) {
+        guard isPlayTabVisible != isVisible else { return }
         isPlayTabVisible = isVisible
+        refresh()
     }
 
     func setActionHandlers(
